@@ -1,0 +1,5 @@
+species,lower_bound,upper_bound
+N,1.00E+11,1.00E+12
+S,4,4
+B,1e-80,1e-80
+A,1.00E-10,1.00E-10

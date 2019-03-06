@@ -1,0 +1,13 @@
+parameter,lower_bound,upper_bound
+D,0.01,0.5
+KB,1.00E-09,1.00E-06
+K,1.50E-05,1.50E-05
+K_omega,1.00E-07,1.00E-06
+S0,4,4
+g,1.00E+12,1.00E+12
+kA,1.00E-22,1.00E-15
+kBmax,1.00E-22,1.00E-15
+mu_max,0.4,3
+nB,1,2
+n_omega,1,2
+omega_max,0.5,2

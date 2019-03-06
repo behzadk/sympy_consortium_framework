@@ -1,0 +1,12 @@
+parameter,lower_bound,upper_bound
+D,0,1
+KB,0,1
+K,0,1
+K_omega,0,1
+S0,0,1
+g,0,1
+kBmax,0,1
+mu_max,0,1
+nB,0,1
+n_omega,0,1
+omega_max,0,1
