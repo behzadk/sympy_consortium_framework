@@ -75,7 +75,7 @@ class model_space():
         self.max_substrate_dependencies = max_substrate_dependencies
         self.max_microcin_sensitivities = max_microcin_sensitivities
 
-    def generate_part_combinations(self, strain_max_microcin, strain_max_AHL, strain_max_sub, strain_max_microcin_sens):
+    def generate_part_combinations(self, strain_max_microcin, strain_max_AHL, strain_max_sub, strain_max_microcin_sens, strain_max_sub_production):
         # Construct possible combinations for each part. [None] added to AHL production, microcin production and
         # microcin sensitivity represent empty part. The purpose of this is so we generate combinations with one or more
         # of each part.
@@ -93,10 +93,17 @@ class model_space():
         microcin_sensitivities_list = [list(i for i in m_id if i != None) for m_id in
                                        itertools.combinations(self.microcin_ids + [None], strain_max_microcin_sens)]
 
+        substrate_production_list = [list(i for i in s if i != None) for s in
+                                       itertools.combinations(self.substrate_objects, strain_max_sub_production)]
+
+
         # Append empty list representing no production or sensitivity, only necessarry if less than two max parts
-        if strain_max_AHL > 1: AHL_production_lists.append([])
-        if strain_max_microcin > 1: microcin_production_lists.append([])
-        if strain_max_microcin_sens > 1: microcin_sensitivities_list.append([])
+        if strain_max_AHL > 1:
+            AHL_production_lists.append([])
+        if strain_max_microcin > 1:
+            microcin_production_lists.append([])
+        if strain_max_microcin_sens > 1:
+            microcin_sensitivities_list.append([])
 
         # Generate all different combinations of parts
         for idx_m, m in enumerate(microcin_production_lists):
@@ -105,9 +112,7 @@ class model_space():
                     for idx_sensi, sensi in enumerate(microcin_sensitivities_list):
                         self.part_combinations.append([m, a, s, sensi])
 
-
         return self.part_combinations
-
 
     def remove_symmetries(self):
         all_adj_mats = []
@@ -115,7 +120,6 @@ class model_space():
 
         # utils.check_model_list_repeats(self.models_list, 0, 0)
         # Check for direct matches
-
 
         print("Removing direct symmetries")
         for idx, model in enumerate(tqdm(self.models_list)):
@@ -131,7 +135,6 @@ class model_space():
         for idx, model in enumerate(self.models_list):
             if idx in keep_idx_0:
                 clean_stage_1_adj_mats.append(model.adjacency_matrix)
-
 
         strain_init_idx = 0
         microcin_init_idx = strain_init_idx + len(self.strain_ids)
@@ -163,10 +166,7 @@ class model_space():
             if match is False:
                 keep_idx_1.append(idx)
 
-
-
         return keep_idx_1
-
 
     def generate_models(self):
         model_idx = 0
@@ -183,14 +183,13 @@ class model_space():
 
             new_model = model.Model(model_idx, model_strains)
 
-
             new_model.generate_adjacency_matrix(self.max_AHL_parts, self.max_microcin_parts, len(self.strain_ids))
-            total_sys +=1
+            total_sys += 1
 
             if new_model.is_legal():
                 self.models_list.append(new_model)
                 model_idx += 1
-        
+
         print("Number of systems: ", total_sys)
         keep_idx = self.remove_symmetries()
         self.models_list = [self.models_list[i] for i in keep_idx]
@@ -206,13 +205,12 @@ class model_space():
         model_idx = 0
         for m in self.models_list:
             m.idx = model_idx
-            model_idx +=1
-
+            model_idx += 1
 
         return self.models_list
 
     def generate_model_reference_table(self, max_microcin_parts, max_AHL_parts,
-                                   max_substrate_dependencies, max_microcin_sensitivities):
+                                       max_substrate_dependencies, max_microcin_sensitivities):
         # Make column headers
 
         cell_prefix = 'cell_IDX_'
@@ -279,5 +277,3 @@ class model_space():
             models_datasheet.loc[model.idx] = model_data
 
         return models_datasheet
-
-

@@ -54,13 +54,21 @@ def gen_diff_eq_substrate(substrate_id, strain_list):
     # Term defining consumption of substrate by a strain
     strain_growth_rate = funcs['mu_#N#']
     strain_consumption = strain_growth_rate + ' * N_#N# * C / g_#N#'
+    strain_production = 'N_#N# * p_#S#'
 
     # Sum of all consumption by strains
     for strain in strain_list:
         substrates = strain.substrate_dependences
-        for s in substrates:
-            if s.id is substrate_id:
+        for consume_s in substrates:
+            if consume_s.id is substrate_id:
                 dS_dt = dS_dt + ' - ' + strain_consumption
+                dS_dt = dS_dt.replace('#N#', strain.id)
+
+    for strain in strain_list:
+        produce_substrates = strain.substrate_production
+        for produce_s in substrates:
+            if produce_s.id is substrate_id:
+                dS_dt = dS_dt + ' + ' + strain_production
                 dS_dt = dS_dt.replace('#N#', strain.id)
 
     dS_dt = dS_dt.replace('#S#', substrate_id)
