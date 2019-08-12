@@ -17,6 +17,10 @@ funcs = {
 
     # Function defining sensitivity to microcin
     'omega': '( omega_max_#B# * B_#B#^n_omega_#B# / ( K_omega_#B# ^ n_omega_#B# + B_#B# ^ n_omega_#B# ) )'
+
+    # Function defining sensitivity to microcin and protection from cognate antitoxin like object
+    'omega_AT': '( omega_max_#B# * ( B_#B#^n_omega_#B# / ( K_omega_#B# ^ n_omega_#B# + B_#B# ^ n_omega_#B# ) * ( K_V_#B# / V + K_V_#B# ) ) )'
+
 }
 
 # Base eqs contain the description of species before interactions with other species.
@@ -25,7 +29,8 @@ base_eqs = {
     'N_#N#': '( - D * N_#N# )',
     'S_#S#': '( D * ( S0_#S# - S_#S# ) )',
     'B_#B#': '( - D * B_#B# )',
-    'A_#A#': '( - D * A_#A# )'
+    'A_#A#': '( - D * A_#A# )',
+    'V_#V#': '( - D * V_#V# )',
 }
 
 def gen_strain_growth_diff(strain_id, strain_list):
@@ -38,9 +43,11 @@ def gen_strain_growth_diff(strain_id, strain_list):
             for s in strain.substrate_dependences:
                 dN_dt = dN_dt + ' * ' + funcs['mu_#N#'].replace('#S#', s.id)
 
+            # Strain sensitive to microcin, protected by 'antitoxins'
             for m in strain.sensitivities:
-                dN_dt = dN_dt + ' - ' + funcs['omega'] + ' * N_#N#'
+                dN_dt = dN_dt + ' - ' + funcs['omega_AT'] + ' * N_#N#'
                 dN_dt = dN_dt.replace('#B#', m)
+
 
     dN_dt = dN_dt.replace('#N#', strain_id)
     N_key = 'N_#N#'.replace('#N#', strain_id)
