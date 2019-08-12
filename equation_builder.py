@@ -1,4 +1,5 @@
 import sympy
+import numpy as np
 
 funcs = {
     # Strain growth rate
@@ -12,7 +13,7 @@ funcs = {
     'k_b_repr_#B#': '( KB_#B# ^ nB_#B# / ( KB_#B# ^ nB_#B# + A_#A# ^ nB_#B# ) )',
 
     # Production of an AHL species
-    'A_production': 'kA_#A# * N_#N#',
+    'A_production': 'kA_#A# * N_#N# * C',
 
     # Function defining sensitivity to microcin
     'omega': '( omega_max_#B# * B_#B#^n_omega_#B# / ( K_omega_#B# ^ n_omega_#B# + B_#B# ^ n_omega_#B# ) )'
@@ -52,7 +53,7 @@ def gen_diff_eq_substrate(substrate_id, strain_list):
 
     # Term defining consumption of substrate by a strain
     strain_growth_rate = funcs['mu_#N#']
-    strain_consumption = strain_growth_rate + ' * N_#N# / g_#N#'
+    strain_consumption = strain_growth_rate + ' * N_#N# * C / g_#N#'
 
     # Sum of all consumption by strains
     for strain in strain_list:
@@ -91,14 +92,16 @@ def gen_microcin_diff_eq(microcin_id, strain_list):
             if b.id is microcin_id:
                 dB_dt = dB_dt + ' + ' + ' kBmax_#B# '
 
-                # Induction terms
-                for a in b.AHL_inducers:
-                    dB_dt = dB_dt + ' * ' + funcs['k_b_ind_#B#'].replace('#A#', a.id)
+                if b.AHL_inducers is not np.nan:
+                    # Induction terms
+                    for a in b.AHL_inducers:
+                        dB_dt = dB_dt + ' * ' + funcs['k_b_ind_#B#'].replace('#A#', a.id)
 
-                for a in b.AHL_repressors:
-                    dB_dt = dB_dt + ' * ' + funcs['k_b_repr_#B#'].replace('#A#', a.id)
+                if b.AHL_repressors is not np.nan:
+                    for a in b.AHL_repressors:
+                        dB_dt = dB_dt + ' * ' + funcs['k_b_repr_#B#'].replace('#A#', a.id)
 
-                dB_dt = dB_dt + ' * N_#N# '
+                dB_dt = dB_dt + ' * N_#N# * C'
                 dB_dt = dB_dt.replace('#N#', strain.id)
 
     dB_dt = dB_dt.replace('#B#', microcin_id)

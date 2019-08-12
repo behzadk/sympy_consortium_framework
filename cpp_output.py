@@ -133,7 +133,9 @@ class Cpp_source_output:
 
         return cpp_out
 
-    def write_source_file(self, path):
+    def write_source_file(self, output_dir):
+        out_path = output_dir + "model.cpp"
+
         source_out = self.make_includes()
         source_out += self.make_class_initialisation()
         source_out += self.make_run_functions()
@@ -141,7 +143,7 @@ class Cpp_source_output:
             source_out += self.make_model_function(m)
             source_out += self.make_jac_function(m)
 
-        text_file = open(path, "w")
+        text_file = open(out_path, "w")
         text_file.write(source_out)
         text_file.close()
 
@@ -202,7 +204,8 @@ class Cpp_header_output:
         return cpp_out
 
 
-    def write_header_file(self, path):
+    def write_header_file(self, output_dir):
+        out_path = output_dir + "model.h"
         header_output = self.make_header_guard()
         header_output += self.make_includes()
         header_output += self.make_class_and_typedef()
@@ -210,6 +213,6 @@ class Cpp_header_output:
 
         header_output += "};\n\n#endif"
 
-        text_file = open(path, "w")
+        text_file = open(out_path, "w")
         text_file.write(header_output)
         text_file.close()

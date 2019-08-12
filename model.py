@@ -5,6 +5,9 @@ import numpy as np
 import pandas as pd
 import csv
 import species
+import os
+import utils
+
 
 class Model:
     def __init__(self, model_idx, strain_list):
@@ -95,10 +98,12 @@ class Model:
             # AHL mic interactions. from AHL to mic
             for mic in all_microcin_objects:
                 idx_mic = all_microcin_ids.index(mic.id)
-                print(all_microcin_ids)
 
                 # Repressors
-                try:
+                try:#
+                    if mic.AHL_repressors is np.nan:
+                        continue
+
                     repressor = mic.AHL_repressors[0]
                     AHL_repressor_idx = [i for i, x in enumerate(all_AHLs) if x == repressor]
 
@@ -113,6 +118,9 @@ class Model:
 
                 # Inducers
                 try:
+                    if mic.AHL_repressors is np.nan:
+                        continue
+
                     inducer = mic.AHL_inducers[0]
                     AHL_inducer_idx = [i for i, x in enumerate(all_AHLs) if x == inducer]
                     for idx_AHL in AHL_inducer_idx:
@@ -167,8 +175,10 @@ class Model:
         # Legal requirements
         for s in self.strains:
             for m in s.microcins:
-                required_AHL += m.AHL_inducers
-                required_AHL += m.AHL_repressors
+                if m.AHL_inducers is not np.nan:
+                    required_AHL += m.AHL_inducers
+                if m.AHL_inducers is not np.nan:
+                    required_AHL += m.AHL_repressors
 
             for m_sens in s.sensitivities:
                 required_microcin += [m_sens]
@@ -271,7 +281,11 @@ class Model:
             for A in N.AHLs:
                 print(A.id)
 
-    def write_adj_matrix(self, output_path, mic_ids, AHL_ids, strain_ids):
+    def write_adj_matrix(self, output_dir, mic_ids, AHL_ids, strain_ids):
+        adj_mat_dir = output_dir + "adj_matricies/"
+        utils.make_folder(adj_mat_dir)
+
+        adj_mat_path = adj_mat_dir + 'model_' + str(self.idx) + '_adj_mat.csv'
 
         new_mic_ids = []
         for idx, i in enumerate(mic_ids):
@@ -287,7 +301,7 @@ class Model:
 
         adj_matrix = self.adjacency_matrix
 
-        with open(output_path, 'w') as f:  # Just use 'w' mode in 3.x
+        with open(adj_mat_path, 'w') as f:  # Just use 'w' mode in 3.x
             w = csv.writer(f)
             adj_mat_species = new_strain_ids + new_mic_ids + new_AHL_ids
             header = [None] + adj_mat_species
@@ -301,9 +315,13 @@ class Model:
     # Writes upper and lower boundaries for uniform priors to a csv, separately for
     # parameters and species using a csv containing default parameters.
     ##
-    def write_prior_parameter_dict(self, default_params_path, output_path):
-        model_parameters = self.params_list
+    def write_prior_parameter_dict(self, default_params_path, output_dir):
+        sim_inputs_dir = output_dir + "input_files/"
+        utils.make_folder(sim_inputs_dir)
 
+        sim_params_path = sim_inputs_dir + 'params_' + str(self.idx) + ".csv"
+
+        model_parameters = self.params_list
         default_params = pd.read_csv(default_params_path)
 
         prior_dict = {}
@@ -328,13 +346,18 @@ class Model:
             print('mismatch in length of prior dict and model parameters.', len(prior_dict), len(model_parameters))
 
 
-        with open(output_path, 'w') as f:  # Just use 'w' mode in 3.x
+        with open(sim_params_path, 'w') as f:  # Just use 'w' mode in 3.x
             w = csv.writer(f)
             for key, value in prior_dict.items():
                 w.writerow([key, value[0], value[1]])
 
 
-    def write_init_species_dict(self, default_init_species_path, output_path):
+    def write_init_species_dict(self, default_init_species_path, output_dir):
+        sim_inputs_dir = output_dir + "input_files/"
+        utils.make_folder(sim_inputs_dir)
+
+        sim_species_path = sim_inputs_dir + 'species_' + str(self.idx) + ".csv"
+
         model_species = self.species_list
         default_species = pd.read_csv(default_init_species_path)
 
@@ -365,7 +388,20 @@ class Model:
 
 
 
-        with open(output_path, 'w') as f:  # Just use 'w' mode in 3.x
+        with open(sim_species_path, 'w') as f:  # Just use 'w' mode in 3.x
             w = csv.writer(f)
             for key, value in prior_dict.items():
                 w.writerow([key, value[0], value[1]])
+
+
+    def write_python_equations(self, output_path):
+        py_eqs_dir = output_path + "py_eqs_txt_files/"
+        utils.make_folder(py_eqs_dir)
+
+        model_py_eqs_path = py_eqs_dir + "model_" + str(self.idx) + "_eqs.txt"
+
+        with open(model_py_eqs_path, 'w') as txt_file:  # Just use 'w' mode in 3.x
+            for eq in self.diff_eqs:
+                res = eq + " = " + str(self.diff_eqs[eq]) + "\n\n"
+                res = res.replace("^", "**")
+                txt_file.write(res)

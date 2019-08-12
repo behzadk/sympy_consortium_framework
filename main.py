@@ -8,10 +8,69 @@ from cpp_output import Cpp_source_output
 from cpp_output import Cpp_header_output
 
 import model_space_generator
+import csv
+import ast
+
+import utils
+
+class PowForDoubleStar(ast.NodeTransformer):
+    def visit_BinOp(self, node):
+        node.left = self.visit(node.left)
+        node.right = self.visit(node.right)
+        pow_func = ast.parse("math.pow", mode="eval").body
+        if isinstance(node.op, ast.Pow):
+            node = ast.copy_location(
+                       ast.Call(func=pow_func,
+                                args=[node.left, node.right],
+                                keywords=[]
+                               ),
+                       node
+                   )
+
+        return node
+
+
+def generate_simulation_files(model_list, output_dir):
+    utils.make_folder(output_dir)
+    print("Number of legal models: ", len(model_list))
+    print("building equations and writing input files")
+
+    print("Building cpp files.. ")
+    for idx, m in enumerate(model_list):
+        print(idx)
+        m.build_equations()
+        m.build_symbolic_equations()
+        m.build_jacobian()
+        m.extract_species()
+        m.extract_params()
+        m.write_python_equations(output_dir)
+
+        default_params_path = './default_params/default_params.csv'
+        default_init_species_path = './default_params/default_init_species.csv'
+
+        m.write_prior_parameter_dict(default_params_path, output_dir)
+        m.write_init_species_dict(default_init_species_path, output_dir)
+
+    print("Writing source and header files")
+    cpp_out = Cpp_source_output(model_list)
+    cpp_out.write_source_file(output_dir)
+    header = Cpp_header_output(model_list)
+    header.write_header_file(output_dir)
+
+def generate_adjacency_matricies(model_list, microcin_ids, AHL_ids, strain_ids, output_dir):
+    utils.make_folder(output_dir)
+
+    for idx, m in enumerate(model_list):
+        m.write_adj_matrix(output_dir, microcin_ids, AHL_ids, strain_ids)
+
 
 def two_species_no_symm():
-    output_dir = "./output/two_species_no_symm/input_files/"
-    adj_matrix_out_dir = "./output/two_species_no_symm/adj_matricies/"
+    output_dir = "./output/input_files_two_species_1/"
+
+    default_params_path = './default_params/default_params.csv'
+    default_init_species_path = './default_params/default_init_species.csv'
+
+    # Set species IDs
     S_glu = Substrate('glu')
     AHL_ids = ['1', '2']
     AHL_1 = AHL(AHL_ids[0])
@@ -19,17 +78,21 @@ def two_species_no_symm():
 
     AHL_objects = [AHL_1, AHL_2]
     substrate_objects = [S_glu]
-    microcin_ids = ['mccV', 'mccB']
-    strain_ids = ['x', 'c']
+    microcin_ids = ['1', '2']
+    strain_ids = ['1', '2']
 
+    # Numerical maximum number of parts
+    max_substrate_parts = len(substrate_objects)
+    max_microcin_parts = len(microcin_ids)
+    max_AHL_parts = len(AHL_objects)
+    max_strains_parts = len(strain_ids)
+
+
+    # Generate microcin expression objects from AHLs and microcins
     microcin_objects, microcin_configs_df = model_space_generator.generate_microcin_combinations(microcin_ids,
                                                                                                  AHL_objects,
                                                                                                  microcin_induced=True,
-                                                                                                 microcin_repressed=False)
-    max_substrate_parts = len(substrate_objects)
-    max_microcin_parts = len(AHL_objects)
-    max_AHL_parts = len(microcin_ids)
-    max_strains_parts = len(strain_ids)
+                                                                                                 microcin_repressed=True, microcin_constitutive=True)
 
 
     model_space = model_space_generator.model_space(strain_ids, microcin_objects,
@@ -37,87 +100,66 @@ def two_species_no_symm():
                                                     max_microcin_parts, max_AHL_parts,
                                                     max_substrate_parts, max_microcin_sensitivities=2)
 
-    part_combos = model_space.generate_part_combinations(1, 2, 1, 2)
+    part_combos = model_space.generate_part_combinations(strain_max_microcin=1, strain_max_AHL=2, strain_max_sub=1, strain_max_microcin_sens=2)
 
     print("Number of part combinations: ", len(part_combos))
 
     model_list = model_space.generate_models()
 
-    models_ref_df = model_space.generate_model_reference_table(max_microcin_parts, max_AHL_parts,
-                                                               max_substrate_parts, max_microcin_sensitivities=2)
-
-    microcin_configs_df.to_csv(output_dir + 'microcin_config.csv')
-    models_ref_df.to_csv(output_dir + 'model_ref.csv')
-    print("Number of legal models: ", len(model_list))
-    print("building equations and writing input files")
-
-    for idx, m in enumerate(model_list):
-        m.build_equations()
-        m.build_symbolic_equations()
-        m.build_jacobian()
-        m.extract_species()
-        m.extract_params()
-
-        default_params_path = './default_params/default_params.csv'
-        default_init_species_path = './default_params/default_init_species.csv'
-
-        adj_mat_path = adj_matrix_out_dir + 'model_' + str(idx) + '_adj_mat.csv'
-        m.write_adj_matrix(adj_mat_path, microcin_ids, AHL_ids, strain_ids)
-        m.write_prior_parameter_dict(default_params_path, output_dir + 'params_' + str(idx) + '.csv')
-        m.write_init_species_dict(default_init_species_path, output_dir + 'species_' + str(idx) + '.csv')
-
-    print("writing source and header files")
-    cpp_out = Cpp_source_output(model_list)
-    cpp_out.write_source_file(output_dir + 'model.cpp')
-    header = Cpp_header_output(model_list)
-    header.write_header_file(output_dir + 'model.h')
+    generate_simulation_files(model_list, output_dir)
+    generate_adjacency_matricies(model_list, microcin_ids, AHL_ids, strain_ids, output_dir)
 
 def three_species_no_symm():
-    output_dir = "./output/3_species_space/"
+    output_dir = "./output/input_files_three_species_0/"
+
+    out_inputs_dir = output_dir + "input_files/"
+    adj_matrix_out_dir = output_dir + "adj_matricies/"
+
     S_glu = Substrate('glu')
-    AHL_1 = AHL('1')
-    AHL_2 = AHL('2')
+    AHL_ids = ['1', '2']
+
+    AHL_1 = AHL(AHL_ids[0])
+    AHL_2 = AHL(AHL_ids[1])
 
     AHL_objects = [AHL_1, AHL_2]
     substrate_objects = [S_glu]
-    microcin_ids = ['mccV', 'mccB']
-    strain_ids = ['x', 'c', 'y']
+    microcin_ids = ['1', '2']
+    strain_ids = ['1', '2', '3']
+
+    print("generating microcin combinations")
     microcin_objects, microcin_configs_df = model_space_generator.generate_microcin_combinations(microcin_ids,
                                                                                                  AHL_objects,
                                                                                                  microcin_induced=True,
-                                                                                                 microcin_repressed=False)
+                                                                                                 microcin_repressed=True,
+                                                                                                 microcin_constitutive=True)
 
-    model_space = model_space_generator.model_space(strain_ids, microcin_objects, AHL_objects, substrate_objects)
-    part_combos = model_space.generate_part_combinations(1, 1, 1, max_microcin_sensitivities=2)
+    max_substrate_parts = len(substrate_objects)
+    max_microcin_parts = len(microcin_ids)
+    max_AHL_parts = len(AHL_objects)
+    max_strains_parts = len(strain_ids)
+
+    print("generating model space")
+    model_space = model_space_generator.model_space(strain_ids, microcin_objects, AHL_objects, substrate_objects,
+                                                    max_microcin_parts=max_microcin_parts, max_AHL_parts=max_AHL_parts,
+                                                    max_substrate_dependencies=max_substrate_parts,
+                                                    max_microcin_sensitivities=max_microcin_parts)
+
+    print("generating_part_combinations")
+    part_combos = model_space.generate_part_combinations(1, 2, 1, 2)
+
+    print("Generating model list")
     model_list = model_space.generate_models()
 
-    models_ref_df = model_space.generate_model_reference_table(1, 1, 1, max_microcin_sensitivities=2)
+    print("generating reference table")
 
-    microcin_configs_df.to_csv(output_dir + 'microcin_config.csv')
-    models_ref_df.to_csv(output_dir + 'model_ref.csv')
+    # models_ref_df = model_space.generate_model_reference_table(max_microcin_parts, max_AHL_parts,
+    #                                                            max_substrate_parts, max_microcin_parts)
 
-    print("Number of part combinations: ", len(part_combos))
-    print("Number of legal models: ", len(model_list))
-    print("building equations and writing input files")
+    print("generating simulation files")
+    generate_simulation_files(model_list, output_dir)
 
-    for idx, m in enumerate(model_list):
-        m.build_equations()
-        m.build_symbolic_equations()
-        m.build_jacobian()
-        m.extract_species()
-        m.extract_params()
-
-        default_params_path = './default_params/default_params.csv'
-        default_init_species_path = './default_params/default_init_species.csv'
-
-        m.write_prior_parameter_dict(default_params_path, output_dir + 'params_' + str(idx) + '.csv')
-        m.write_init_species_dict(default_init_species_path, output_dir + 'species_' + str(idx) + '.csv')
-
-    print("writing source and header files")
-    cpp_out = Cpp_source_output(model_list)
-    cpp_out.write_source_file(output_dir + 'model.cpp')
-    header = Cpp_header_output(model_list)
-    header.write_header_file(output_dir + 'model.h')
+    print("generating generate_adjacency_matricies")
+    generate_adjacency_matricies(model_list, microcin_ids, AHL_ids, strain_ids, output_dir)
 
 
 def main():

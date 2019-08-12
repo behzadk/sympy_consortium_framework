@@ -3,6 +3,8 @@ import pandas as pd
 import itertools
 import model
 import numpy as np
+import utils
+from tqdm import tqdm
 
 ##
 # Generates microcin objects for all combinations, given a list of AHL objects and information on
@@ -96,7 +98,6 @@ class model_space():
         if strain_max_microcin > 1: microcin_production_lists.append([])
         if strain_max_microcin_sens > 1: microcin_sensitivities_list.append([])
 
-
         # Generate all different combinations of parts
         for idx_m, m in enumerate(microcin_production_lists):
             for idx_a, a in enumerate(AHL_production_lists):
@@ -107,19 +108,30 @@ class model_space():
 
         return self.part_combinations
 
+
     def remove_symmetries(self):
         all_adj_mats = []
         keep_idx_0 = []
 
+        # utils.check_model_list_repeats(self.models_list, 0, 0)
         # Check for direct matches
-        for idx, model in enumerate(self.models_list):
+
+
+        print("Removing direct symmetries")
+        for idx, model in enumerate(tqdm(self.models_list)):
             if any(np.array_equal(x, model.adjacency_matrix) for x in all_adj_mats):
                 continue
-
 
             else:
                 keep_idx_0.append(idx)
                 all_adj_mats.append(model.adjacency_matrix)
+
+        clean_stage_1_adj_mats = []
+
+        for idx, model in enumerate(self.models_list):
+            if idx in keep_idx_0:
+                clean_stage_1_adj_mats.append(model.adjacency_matrix)
+
 
         strain_init_idx = 0
         microcin_init_idx = strain_init_idx + len(self.strain_ids)
@@ -131,7 +143,9 @@ class model_space():
 
         # Flip strain columns and remove symmetrical strains
         keep_idx_1 = []
-        for idx in keep_idx_0:
+
+        print("Removing indirect symmetries")
+        for idx in tqdm(keep_idx_0):
             permute_strains = list(itertools.permutations(strains_index_range))
             original_config = permute_strains[0]
             model_adj = self.models_list[idx].adjacency_matrix
@@ -142,8 +156,9 @@ class model_space():
                 new_adj.T[[original_config]] = new_adj.T[[perm]]
                 new_adj[[original_config]] = new_adj[[perm]]
 
-                if any(np.array_equal(x, new_adj) for x in all_adj_mats):
+                if any(np.array_equal(x, new_adj) for x in clean_stage_1_adj_mats):
                     match = True
+                    break
 
             if match is False:
                 keep_idx_1.append(idx)
@@ -162,6 +177,7 @@ class model_space():
         for sys in system_combinations:
             model_strains = []
             for idx, N_id in enumerate(self.strain_ids):
+                # exit()
                 new_strain = species.Strain(N_id, *sys[idx])
                 model_strains.append(new_strain)
 
@@ -174,16 +190,24 @@ class model_space():
             if new_model.is_legal():
                 self.models_list.append(new_model)
                 model_idx += 1
+        
         print("Number of systems: ", total_sys)
-
         keep_idx = self.remove_symmetries()
         self.models_list = [self.models_list[i] for i in keep_idx]
+
+        # # Add wt controls as model 0
+        # wt_strains = []
+        # for idx, N_id in enumerate(self.strain_ids):
+        #     new_strain = species.Strain(N_id, [], [], [], [])
+        #     wt_strains.append(new_strain)
+        # new_model = model.Model(0, wt_strains)
 
         # reset model indexes
         model_idx = 0
         for m in self.models_list:
             m.idx = model_idx
             model_idx +=1
+
 
         return self.models_list
 
