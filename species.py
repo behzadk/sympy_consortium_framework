@@ -17,13 +17,12 @@ class Strain:
         self.microcins = microcin_expression
         self.AHLs = AHL_expression
         self.sensitivities = microcin_sensitivities
-        self.substratee_production = substrate_production
-
+        self.substrate_production = substrate_production
         self.diff_eqs = {}
 
 
 class Microcin:
-    def __init__(self, config_idx, microcin_id, AHL_inducer_list, AHL_repressor_list, constitutive_expression = False):
+    def __init__(self, config_idx, microcin_id, AHL_inducer_list, AHL_repressor_list, constitutive_expression=False):
         self.config_idx = config_idx
         self.id = microcin_id
         self.AHL_inducers = AHL_inducer_list

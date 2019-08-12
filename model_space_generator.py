@@ -72,8 +72,9 @@ class model_space():
         # Maximum parts for each strain
         self.max_microcin_parts = max_microcin_parts
         self.max_AHL_parts = max_AHL_parts
-        self.max_substrate_dependencies = max_substrate_dependencies
+        self.max_substrate_parts = max_substrate_dependencies
         self.max_microcin_sensitivities = max_microcin_sensitivities
+
 
     def generate_part_combinations(self, strain_max_microcin, strain_max_AHL, strain_max_sub, strain_max_microcin_sens, strain_max_sub_production):
         # Construct possible combinations for each part. [None] added to AHL production, microcin production and
@@ -94,23 +95,26 @@ class model_space():
                                        itertools.combinations(self.microcin_ids + [None], strain_max_microcin_sens)]
 
         substrate_production_list = [list(i for i in s if i != None) for s in
-                                       itertools.combinations(self.substrate_objects, strain_max_sub_production)]
+                                       itertools.combinations(self.substrate_objects  + [None], strain_max_sub_production)]
 
 
-        # Append empty list representing no production or sensitivity, only necessarry if less than two max parts
+        # Append empty list representing no production or sensitivity, only necessarry if more than two max parts
         if strain_max_AHL > 1:
             AHL_production_lists.append([])
         if strain_max_microcin > 1:
             microcin_production_lists.append([])
         if strain_max_microcin_sens > 1:
             microcin_sensitivities_list.append([])
-
+        if strain_max_sub_production > 1:
+            substrate_production_list.append([])
+        
         # Generate all different combinations of parts
-        for idx_m, m in enumerate(microcin_production_lists):
-            for idx_a, a in enumerate(AHL_production_lists):
-                for idx_s, s in enumerate(substrate_dependencies_list):
-                    for idx_sensi, sensi in enumerate(microcin_sensitivities_list):
-                        self.part_combinations.append([m, a, s, sensi])
+        for m in microcin_production_lists:
+            for a in AHL_production_lists:
+                for s in substrate_dependencies_list:
+                    for sensi in microcin_sensitivities_list:
+                        for s_prod in substrate_production_list:
+                            self.part_combinations.append([m, a, s, sensi, s_prod])
 
         return self.part_combinations
 
@@ -177,13 +181,12 @@ class model_space():
         for sys in system_combinations:
             model_strains = []
             for idx, N_id in enumerate(self.strain_ids):
-                # exit()
                 new_strain = species.Strain(N_id, *sys[idx])
                 model_strains.append(new_strain)
 
             new_model = model.Model(model_idx, model_strains)
 
-            new_model.generate_adjacency_matrix(self.max_AHL_parts, self.max_microcin_parts, len(self.strain_ids))
+            new_model.generate_adjacency_matrix(self.max_substrate_parts, self.max_AHL_parts, self.max_microcin_parts, len(self.strain_ids))
             total_sys += 1
 
             if new_model.is_legal():
@@ -208,6 +211,18 @@ class model_space():
             model_idx += 1
 
         return self.models_list
+
+    def spock_manu_model_filter(self):
+        keep_list = []
+
+        # keep models with only one strain engineered
+        for model in tqdm(self.models_list):
+            if sum(model.adjacency_matrix[:, 0]) == 0 or sum(model.adjacency_matrix[:, 1]) == 0:
+                keep_list.append(model)
+
+        self.model_list = keep_list
+
+        return self.model_list
 
     def generate_model_reference_table(self, max_microcin_parts, max_AHL_parts,
                                        max_substrate_dependencies, max_microcin_sensitivities):

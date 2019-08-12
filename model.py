@@ -35,20 +35,22 @@ class Model:
         # AHL rhs
 
     # edges show interactions between species from j (column) to i (row)
-    def generate_adjacency_matrix(self, max_AHL, max_mic, max_strains):
+    def generate_adjacency_matrix(self, max_sub, max_AHL, max_mic, max_strains):
         # Cell1, Cell2, M1, M2, AHL1, AHL2,
-        total_species = max_AHL + max_mic + max_strains
+        total_species = max_AHL + max_mic + max_strains + max_sub
         # total_species = len(self.AHL_ids) + len(self.microcin_ids) + len(self.strain_ids)
         adjacency_matrix = np.zeros([total_species, total_species])
 
         strain_init_idx = 0
-        microcin_init_idx = strain_init_idx + max_strains
+        substrate_init_idx = strain_init_idx + max_strains
+        microcin_init_idx = substrate_init_idx + max_sub
         AHL_init_idx = microcin_init_idx + max_mic
 
 
         all_microcin_objects = []
         all_microcin_ids = []
         all_AHLs = []
+        all_substrates = []
 
         # Collect species objects
         for strain in self.strains:
@@ -63,6 +65,14 @@ class Model:
                 if AHL not in all_AHLs:
                     all_AHLs.append(AHL)
 
+            for s_dependence in strain.substrate_dependences:
+                if s_dependence not in all_substrates:
+                    all_substrates.append(s_dependence)
+
+            for s_production in strain.substrate_production:
+                if s_production not in all_substrates:
+                    all_substrates.append(s_production)
+
 
         # Fill strain sensitivities to microcin sensitivity is a negative interaction from
         # microcin to strain. (i strain row, j mic col )
@@ -74,8 +84,31 @@ class Model:
                         to_node = idx_strain + strain_init_idx
 
                         adjacency_matrix[to_node, from_node] = -1
+        
 
-        # Fill strain production of microcin and AHL
+        # Fill strain substrate dependency and production
+        for idx_strain, strain in enumerate(self.strains):
+            # Dependency
+            for sub_dependence in strain.substrate_dependences:
+                sub_indexs = [all_substrates.index(x) for i, x in enumerate(all_substrates) if x == sub_dependence]
+                for s_idx in sub_indexs:
+                    from_node = s_idx + substrate_init_idx
+                    to_node = idx_strain + strain_init_idx
+
+                    adjacency_matrix[to_node, from_node] = 1
+
+
+            # Production
+            for sub_production in strain.substrate_production:
+                sub_indexs = [all_substrates.index(x) for i, x in enumerate(all_substrates) if x == sub_production]
+                for s_idx in sub_indexs:
+                    from_node = idx_strain + strain_init_idx
+                    to_node = s_idx + substrate_init_idx
+
+                    adjacency_matrix[to_node, from_node] = 1
+
+
+        # Fill strain production of microcin, AHL and substrate
         for idx_strain, strain in enumerate(self.strains):
             # Microcin production
             for idx_strain_mic, strain_mic in enumerate(strain.microcins):
@@ -86,6 +119,7 @@ class Model:
                     to_node = idx_mic + microcin_init_idx
 
                     adjacency_matrix[to_node, from_node] = 1
+
 
             # AHL production
             for idx_strain_AHL, strain_AHL in enumerate(strain.AHLs):
@@ -166,14 +200,22 @@ class Model:
             for s in strain_susbtrates:
                 substrate_id_list.append(s.id)
 
+        for strain in self.strains:
+            strain_susbtrates = strain.substrate_production
+            for s in strain_susbtrates:
+                substrate_id_list.append(s.id)
+
         return list(set(substrate_id_list))
 
     def is_legal(self):
         required_microcin = []
         required_AHL = []
+        required_sub = []
 
         # Legal requirements
         for s in self.strains:
+            required_sub += s.substrate_dependences
+
             for m in s.microcins:
                 if m.AHL_inducers is not np.nan:
                     required_AHL += m.AHL_inducers
@@ -206,6 +248,12 @@ class Model:
         for m in self.microcin_ids:
             if m not in system_sensitivities:
                 return False
+
+        # Remove models where a produced substrate is not consumed
+        for strain in self.strains:
+            for sub in strain.substrate_production:
+                if sub not in required_sub:
+                    return False
 
         return True
 
@@ -281,7 +329,7 @@ class Model:
             for A in N.AHLs:
                 print(A.id)
 
-    def write_adj_matrix(self, output_dir, mic_ids, AHL_ids, strain_ids):
+    def write_adj_matrix(self, output_dir, mic_ids, AHL_ids, strain_ids, substrate_ids):
         adj_mat_dir = output_dir + "adj_matricies/"
         utils.make_folder(adj_mat_dir)
 
@@ -299,11 +347,16 @@ class Model:
         for idx, i in enumerate(strain_ids):
             new_strain_ids.append("N_" + i)
 
+        new_substrate_ids = []
+        for idx, i in enumerate(substrate_ids):
+            new_strain_ids.append("S_" + i)
+
+
         adj_matrix = self.adjacency_matrix
 
-        with open(adj_mat_path, 'w') as f:  # Just use 'w' mode in 3.x
+        with open(adj_mat_path, 'w') as f:
             w = csv.writer(f)
-            adj_mat_species = new_strain_ids + new_mic_ids + new_AHL_ids
+            adj_mat_species = new_strain_ids + new_substrate_ids + new_mic_ids + new_AHL_ids
             header = [None] + adj_mat_species
             w.writerow(header)
 

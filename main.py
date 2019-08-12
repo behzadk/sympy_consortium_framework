@@ -12,6 +12,7 @@ import csv
 import ast
 
 import utils
+from tqdm import tqdm
 
 class PowForDoubleStar(ast.NodeTransformer):
     def visit_BinOp(self, node):
@@ -36,8 +37,7 @@ def generate_simulation_files(model_list, output_dir):
     print("building equations and writing input files")
 
     print("Building cpp files.. ")
-    for idx, m in enumerate(model_list):
-        print(idx)
+    for idx, m in enumerate(tqdm(model_list)):
         m.build_equations()
         m.build_symbolic_equations()
         m.build_jacobian()
@@ -57,11 +57,11 @@ def generate_simulation_files(model_list, output_dir):
     header = Cpp_header_output(model_list)
     header.write_header_file(output_dir)
 
-def generate_adjacency_matricies(model_list, microcin_ids, AHL_ids, strain_ids, output_dir):
+def generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, output_dir):
     utils.make_folder(output_dir)
 
     for idx, m in enumerate(model_list):
-        m.write_adj_matrix(output_dir, microcin_ids, AHL_ids, strain_ids)
+        m.write_adj_matrix(output_dir, microcin_ids, AHL_ids, strain_ids, substrate_ids)
 
 
 def two_species_no_symm():
@@ -71,13 +71,17 @@ def two_species_no_symm():
     default_init_species_path = './default_params/default_init_species.csv'
 
     # Set species IDs
-    S_glu = Substrate('glu')
+    substrate_ids = ['glu']
+    S_glu = Substrate(substrate_ids[0])
+    substrate_objects = [S_glu]
+
     AHL_ids = ['1', '2']
     AHL_1 = AHL(AHL_ids[0])
     AHL_2 = AHL(AHL_ids[1])
 
     AHL_objects = [AHL_1, AHL_2]
-    substrate_objects = [S_glu]
+
+
     microcin_ids = ['1', '2']
     strain_ids = ['1', '2']
 
@@ -100,14 +104,15 @@ def two_species_no_symm():
                                                     max_microcin_parts, max_AHL_parts,
                                                     max_substrate_parts, max_microcin_sensitivities=2)
 
-    part_combos = model_space.generate_part_combinations(strain_max_microcin=1, strain_max_AHL=2, strain_max_sub=1, strain_max_microcin_sens=2)
+    part_combos = model_space.generate_part_combinations(strain_max_microcin=1, strain_max_AHL=2, strain_max_sub=1, strain_max_microcin_sens=2, strain_max_sub_production=1)
 
     print("Number of part combinations: ", len(part_combos))
 
     model_list = model_space.generate_models()
+    model_list = model_space.spock_manu_model_filter()
 
+    generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, output_dir)
     generate_simulation_files(model_list, output_dir)
-    generate_adjacency_matricies(model_list, microcin_ids, AHL_ids, strain_ids, output_dir)
 
 def three_species_no_symm():
     output_dir = "./output/input_files_three_species_0/"
