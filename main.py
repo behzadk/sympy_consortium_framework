@@ -93,7 +93,6 @@ def two_species_no_symm():
     max_AHL_parts = len(AHL_objects)
     max_strains_parts = len(strain_ids)
 
-
     # Generate microcin expression objects from AHLs and microcins
     microcin_objects, microcin_configs_df = model_space_generator.generate_microcin_combinations(microcin_ids,
                                                                                                  AHL_objects,
