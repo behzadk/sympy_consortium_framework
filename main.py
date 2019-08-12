@@ -57,11 +57,11 @@ def generate_simulation_files(model_list, output_dir):
     header = Cpp_header_output(model_list)
     header.write_header_file(output_dir)
 
-def generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, output_dir):
+def generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, output_dir):
     utils.make_folder(output_dir)
 
     for idx, m in enumerate(model_list):
-        m.write_adj_matrix(output_dir, microcin_ids, AHL_ids, strain_ids, substrate_ids)
+        m.write_adj_matrix(output_dir, microcin_ids, AHL_ids, strain_ids, substrate_ids, antitoxin_ids)
 
 
 def two_species_no_symm():
@@ -84,7 +84,8 @@ def two_species_no_symm():
     AHL_objects = [AHL_1, AHL_2]
 
 
-    microcin_ids = ['1', '2']
+    microcin_ids = ['1']
+    antitoxin_ids = ['B_1'] # Name of antitoxins must match name of microcins.(B_#ID# format)
     strain_ids = ['1', '2']
 
     # Numerical maximum number of parts
@@ -92,7 +93,7 @@ def two_species_no_symm():
     max_microcin_parts = len(microcin_ids)
     max_AHL_parts = len(AHL_objects)
     max_strains_parts = len(strain_ids)
-
+    max_antitoxins = len(antitoxin_ids)
 
     # Generate microcin expression objects from AHLs and microcins
     microcin_objects, microcin_configs_df = model_space_generator.generate_microcin_combinations(microcin_ids,
@@ -100,13 +101,19 @@ def two_species_no_symm():
                                                                                                  microcin_induced=True,
                                                                                                  microcin_repressed=True, microcin_constitutive=True)
 
+    antitoxin_objects, antitoxin_configs_df = model_space_generator.generate_antitoxin_combinations(antitoxin_ids,
+                                                                                                 AHL_objects,
+                                                                                                 antitoxin_induced=True,
+                                                                                                 antitoxin_repressed=True, antitoxin_constitutive=True)
+
+
 
     model_space = model_space_generator.model_space(strain_ids, microcin_objects,
-                                                    AHL_objects, substrate_objects,
+                                                    AHL_objects, substrate_objects, antitoxin_objects,
                                                     max_microcin_parts, max_AHL_parts,
-                                                    max_substrate_parts, max_microcin_sensitivities=2)
+                                                    max_substrate_parts, max_antitoxins, max_microcin_sensitivities=2)
 
-    part_combos = model_space.generate_part_combinations(strain_max_microcin=1, strain_max_AHL=2, strain_max_sub_dependencies=1, strain_max_microcin_sens=2, strain_max_sub_production=1)
+    part_combos = model_space.generate_part_combinations(strain_max_microcin=1, strain_max_AHL=2, strain_max_sub_dependencies=1, strain_max_microcin_sens=2, strain_max_sub_production=1, strain_max_antitoxin=1)
 
     print("Number of part combinations: ", len(part_combos))
 
@@ -117,7 +124,7 @@ def two_species_no_symm():
 
     model_list = model_space.models_list
 
-    generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, output_dir)
+    generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, output_dir)
     generate_simulation_files(model_list, output_dir)
 
 def three_species_no_symm():
@@ -170,7 +177,8 @@ def three_species_no_symm():
     generate_simulation_files(model_list, output_dir)
 
     print("generating generate_adjacency_matricies")
-    generate_adjacency_matricies(model_list, microcin_ids, AHL_ids, strain_ids, output_dir)
+
+    generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, output_dir)
 
 
 def main():

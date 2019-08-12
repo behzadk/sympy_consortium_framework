@@ -11,13 +11,14 @@ The flags are replaced with a index
 
 
 class Strain:
-    def __init__(self, strain_id, microcin_expression, AHL_expression, substrate_dependences, microcin_sensitivities, substrate_production):
+    def __init__(self, strain_id, microcin_expression, AHL_expression, substrate_dependences, microcin_sensitivities, substrate_production, antitoxins):
         self.id = strain_id
         self.substrate_dependences = substrate_dependences
         self.microcins = microcin_expression
         self.AHLs = AHL_expression
         self.sensitivities = microcin_sensitivities
         self.substrate_production = substrate_production
+        self.antitoxins = antitoxins
         self.diff_eqs = {}
 
 
@@ -39,3 +40,10 @@ class Substrate:
     def __init__(self, substrate_id):
         self.id = substrate_id
 
+class Antitoxin:
+    def __init__(self, config_idx, antitoxin_id, AHL_inducer_list, AHL_repressor_list, constitutive_expression=False):
+        self.config_idx = config_idx
+        self.id = antitoxin_id
+        self.AHL_inducers = AHL_inducer_list
+        self.AHL_repressors = AHL_repressor_list
+        self.constitutive_expression = constitutive_expression

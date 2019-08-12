@@ -16,10 +16,16 @@ funcs = {
     'A_production': 'kA_#A# * N_#N# * C',
 
     # Function defining sensitivity to microcin
-    'omega': '( omega_max_#B# * B_#B#^n_omega_#B# / ( K_omega_#B# ^ n_omega_#B# + B_#B# ^ n_omega_#B# ) )'
+    'omega': '( omega_max_#B# * B_#B#^n_omega_#B# / ( K_omega_#B# ^ n_omega_#B# + B_#B# ^ n_omega_#B# ) )',
 
-    # Function defining sensitivity to microcin and protection from cognate antitoxin like object
-    'omega_AT': '( omega_max_#B# * ( B_#B#^n_omega_#B# / ( K_omega_#B# ^ n_omega_#B# + B_#B# ^ n_omega_#B# ) * ( K_V_#B# / V + K_V_#B# ) ) )'
+    # Function defining protection by antitoxin V
+    'V_antitoxin': '( K_V_#V# / ( V + K_V_#V# ) )',
+
+    # Induction of antitoxin expression by AHL
+    'k_v_ind_#V#': '( A_#A# ^ nV_#V# / ( KV_#V# ^ nV_#V#  + A_#A# ^ nV_#V#) )',
+
+    # Repression of bacteriocin expression by AHL
+    'k_v_repr_#B#': '( KB_#B# ^ nV_#V#  / ( KV_#V# ^ nV_#V#  + A_#A# ^ nV_#V# ) )'
 
 }
 
@@ -30,12 +36,18 @@ base_eqs = {
     'S_#S#': '( D * ( S0_#S# - S_#S# ) )',
     'B_#B#': '( - D * B_#B# )',
     'A_#A#': '( - D * A_#A# )',
-    'V_#V#': '( - D * V_#V# )',
+    'V_#V#': '( - D * V_#V# )'
 }
 
 def gen_strain_growth_diff(strain_id, strain_list):
-
     dN_dt = base_eqs['N_#N#']
+
+    # Get antitoxins
+    antitoxin_list = []
+    for strain in strain_list:
+        antitoxin_list += strain.antitoxins
+
+    antitoxin_list = list(set([x.id for x in antitoxin_list]))
 
     for strain in strain_list:
         if strain.id is strain_id:
@@ -45,14 +57,50 @@ def gen_strain_growth_diff(strain_id, strain_list):
 
             # Strain sensitive to microcin, protected by 'antitoxins'
             for m in strain.sensitivities:
-                dN_dt = dN_dt + ' - ' + funcs['omega_AT'] + ' * N_#N#'
+                dN_dt = dN_dt + ' * ' + funcs['omega']
                 dN_dt = dN_dt.replace('#B#', m)
+
+                # Apply antitoxin function if cognate antitoxin is present.
+                for v in antitoxin_list:
+                    if v.split('_')[-1] == m:
+                        dN_dt = dN_dt + ' * ' + funcs['V_antitoxin']
+                        dN_dt = dN_dt.replace('#V#', v)
+                        break
+
+                dN_dt = dN_dt + ' * N_#N#'
 
 
     dN_dt = dN_dt.replace('#N#', strain_id)
     N_key = 'N_#N#'.replace('#N#', strain_id)
 
     return {N_key: dN_dt}
+
+def gen_diff_eq_antitoxin(antitoxin_id, strain_list):
+    dV_dt = base_eqs['V_#V#']
+
+    for strain in strain_list:
+
+        for v in strain.antitoxins:
+            if v.id is antitoxin_id:
+                dV_dt = dV_dt + ' + ' + ' kVmax_#V# '
+
+                if v.AHL_inducers is not np.nan:
+                    # Induction terms
+                    for a in v.AHL_inducers:
+                        dV_dt = dV_dt + ' * ' + funcs['k_v_ind_#V#'].replace('#A#', a.id)
+
+                if v.AHL_repressors is not np.nan:
+                    for a in v.AHL_repressors:
+                        dV_dt = dV_dt + ' * ' + funcs['k_v_repr_#V#'].replace('#A#', a.id)
+
+                dV_dt = dV_dt + ' * N_#N# * C'
+                dV_dt = dV_dt.replace('#N#', strain.id)
+
+    dV_dt = dV_dt.replace('#V#', antitoxin_id)
+    V_key = 'V_#V#'.replace('#V#', antitoxin_id)
+
+    return {V_key: dV_dt}
+
 
 
 def gen_diff_eq_substrate(substrate_id, strain_list):
