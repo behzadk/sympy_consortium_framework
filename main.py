@@ -65,15 +65,17 @@ def generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_id
 
 
 def two_species_no_symm():
-    output_dir = "./output/input_files_two_species_1/"
+    output_dir = "./output/input_files_two_species_spock_manu_0/"
 
     default_params_path = './default_params/default_params.csv'
     default_init_species_path = './default_params/default_init_species.csv'
 
     # Set species IDs
-    substrate_ids = ['glu']
+    substrate_ids = ['glu', 'lys']
     S_glu = Substrate(substrate_ids[0])
-    substrate_objects = [S_glu]
+    S_lys = Substrate(substrate_ids[0])
+
+    substrate_objects = [S_glu, S_lys]
 
     AHL_ids = ['1', '2']
     AHL_1 = AHL(AHL_ids[0])
@@ -104,12 +106,16 @@ def two_species_no_symm():
                                                     max_microcin_parts, max_AHL_parts,
                                                     max_substrate_parts, max_microcin_sensitivities=2)
 
-    part_combos = model_space.generate_part_combinations(strain_max_microcin=1, strain_max_AHL=2, strain_max_sub=1, strain_max_microcin_sens=2, strain_max_sub_production=1)
+    part_combos = model_space.generate_part_combinations(strain_max_microcin=1, strain_max_AHL=2, strain_max_sub_dependencies=1, strain_max_microcin_sens=2, strain_max_sub_production=1)
 
     print("Number of part combinations: ", len(part_combos))
 
-    model_list = model_space.generate_models()
-    model_list = model_space.spock_manu_model_filter()
+    model_space.generate_models()
+    model_space.spock_manu_model_filter()
+    model_space.remove_symmetries()
+    model_space.reset_model_indexes()
+
+    model_list = model_space.models_list
 
     generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, output_dir)
     generate_simulation_files(model_list, output_dir)

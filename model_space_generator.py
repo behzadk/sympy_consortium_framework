@@ -76,7 +76,7 @@ class model_space():
         self.max_microcin_sensitivities = max_microcin_sensitivities
 
 
-    def generate_part_combinations(self, strain_max_microcin, strain_max_AHL, strain_max_sub, strain_max_microcin_sens, strain_max_sub_production):
+    def generate_part_combinations(self, strain_max_microcin, strain_max_AHL, strain_max_sub_dependencies, strain_max_microcin_sens, strain_max_sub_production):
         # Construct possible combinations for each part. [None] added to AHL production, microcin production and
         # microcin sensitivity represent empty part. The purpose of this is so we generate combinations with one or more
         # of each part.
@@ -89,7 +89,7 @@ class model_space():
                                 itertools.combinations(self.AHL_objects + [None], strain_max_AHL)]
 
         substrate_dependencies_list = [list(i for i in s if i != None) for s in
-                                       itertools.combinations(self.substrate_objects, strain_max_sub)]
+                                       itertools.combinations(self.substrate_objects, strain_max_sub_dependencies)]
 
         microcin_sensitivities_list = [list(i for i in m_id if i != None) for m_id in
                                        itertools.combinations(self.microcin_ids + [None], strain_max_microcin_sens)]
@@ -101,10 +101,16 @@ class model_space():
         # Append empty list representing no production or sensitivity, only necessarry if more than two max parts
         if strain_max_AHL > 1:
             AHL_production_lists.append([])
+
         if strain_max_microcin > 1:
             microcin_production_lists.append([])
+
         if strain_max_microcin_sens > 1:
             microcin_sensitivities_list.append([])
+
+        if strain_max_sub_dependencies > 1:
+            substrate_dependencies_list.append([])
+
         if strain_max_sub_production > 1:
             substrate_production_list.append([])
         
@@ -169,8 +175,9 @@ class model_space():
 
             if match is False:
                 keep_idx_1.append(idx)
+        
 
-        return keep_idx_1
+        self.models_list = [self.models_list[i] for i in keep_idx_1]
 
     def generate_models(self):
         model_idx = 0
@@ -194,23 +201,11 @@ class model_space():
                 model_idx += 1
 
         print("Number of systems: ", total_sys)
-        keep_idx = self.remove_symmetries()
-        self.models_list = [self.models_list[i] for i in keep_idx]
 
-        # # Add wt controls as model 0
-        # wt_strains = []
-        # for idx, N_id in enumerate(self.strain_ids):
-        #     new_strain = species.Strain(N_id, [], [], [], [])
-        #     wt_strains.append(new_strain)
-        # new_model = model.Model(0, wt_strains)
+    def reset_model_indexes(self):
+        for idx, model in enumerate(self.models_list):
+            model.idx = idx
 
-        # reset model indexes
-        model_idx = 0
-        for m in self.models_list:
-            m.idx = model_idx
-            model_idx += 1
-
-        return self.models_list
 
     def spock_manu_model_filter(self):
         keep_list = []
@@ -220,9 +215,7 @@ class model_space():
             if sum(model.adjacency_matrix[:, 0]) == 0 or sum(model.adjacency_matrix[:, 1]) == 0:
                 keep_list.append(model)
 
-        self.model_list = keep_list
-
-        return self.model_list
+        self.models_list = keep_list
 
     def generate_model_reference_table(self, max_microcin_parts, max_AHL_parts,
                                        max_substrate_dependencies, max_microcin_sensitivities):
