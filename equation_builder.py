@@ -17,7 +17,7 @@ funcs = {
     # Function defining sensitivity to microcin
     'omega': '( omega_max_#B# * B_#B# ^ n_omega_#B# / ( K_omega_#B# ^ n_omega_#B# + B_#B# ^ n_omega_#B# ) )',
 
-    # Function defining protection by antitoxin V
+    # Function defining production by antitoxin V
     'V_antitoxin': '( K_V_#V# / ( #V# + K_V_#V# ) )',
 
     # Induction of antitoxin expression by AHL
@@ -108,7 +108,7 @@ def gen_diff_eq_substrate(substrate_id, strain_list):
     # Term defining consumption of substrate by a strain
     strain_growth_rate = funcs['mu_#N#']
     strain_consumption = strain_growth_rate + ' * N_#N# * C / g_#N#'
-    strain_production = ' N_#N# * p_#S#'
+    strain_production = ' C * N_#N# * p_#S#'
 
     # Sum of all consumption by strains
     for strain in strain_list:

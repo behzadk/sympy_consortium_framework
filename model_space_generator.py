@@ -180,9 +180,7 @@ class model_space():
         all_adj_mats = []
         keep_idx_0 = []
 
-        # utils.check_model_list_repeats(self.models_list, 0, 0)
-        # Check for direct matches
-
+        # Check for direct matches where two adjacency matrices match
         print("Removing direct symmetries")
         for idx, model in enumerate(tqdm(self.models_list)):
             if any(np.array_equal(x, model.adjacency_matrix) for x in all_adj_mats):
@@ -210,6 +208,8 @@ class model_space():
         keep_idx_1 = []
 
         print("Removing indirect symmetries")
+
+        # Shuffles the strain columns and compares to 
         for idx in tqdm(keep_idx_0):
             permute_strains = list(itertools.permutations(strains_index_range))
             original_config = permute_strains[0]
@@ -218,13 +218,12 @@ class model_space():
             match = False
             for perm in permute_strains[1:]:
                 new_adj = model_adj.copy()
+                # Shuffle first configuration to new configuration
                 new_adj.T[[original_config]] = new_adj.T[[perm]]
-                new_adj[[original_config]] = new_adj[[perm]]
-
+                # new_adj[[original_config]] = new_adj[[perm]]
                 if any(np.array_equal(x, new_adj) for x in clean_stage_1_adj_mats):
                     match = True
                     break
-
             if match is False:
                 keep_idx_1.append(idx)
         
@@ -269,6 +268,17 @@ class model_space():
                 keep_list.append(model)
 
         self.models_list = keep_list
+
+    def one_species_filter(self):
+        keep_list = []
+
+        for model in tqdm(self.models_list):
+            if sum(model.adjacency_matrix[:, 0]) == 3 and sum(model.adjacency_matrix[:, 2]) == -1:
+                keep_list.append(model)
+
+        self.models_list = keep_list
+
+
 
     def generate_model_reference_table(self, max_microcin_parts, max_AHL_parts,
                                        max_substrate_dependencies, max_microcin_sensitivities):

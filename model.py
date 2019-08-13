@@ -145,7 +145,7 @@ class Model:
                 for mic_idx, mic in enumerate(all_microcin_ids):
                     if v.split('_')[-1] == mic:
                         to_node = mic_idx + microcin_init_idx
-                        adjacency_matrix[to_node, from_node] = -11
+                        adjacency_matrix[to_node, from_node] = -1
 
             # AHL production
             for idx_strain_AHL, strain_AHL in enumerate(strain.AHLs):
@@ -546,7 +546,7 @@ class Model:
                     continue
 
         if len(model_species) != len(prior_dict):
-            species_missing = [i for i in model_species if i not in list(param_species.keys())]
+            species_missing = [i for i in model_species if i not in list(model_species.keys())]
             raise RuntimeError('Mismatch in length of prior dict and model species.', 'Prior: ', 
                 len(prior_dict), 'Params needed: ', len(model_parameters), species_missing)
 
@@ -562,10 +562,11 @@ class Model:
         py_eqs_dir = output_path + "py_eqs_txt_files/"
         utils.make_folder(py_eqs_dir)
 
-        model_py_eqs_path = py_eqs_dir + "model_" + str(self.idx) + "_eqs.txt"
+
+        model_py_eqs_path = py_eqs_dir + "model_" + str(self.idx) + "_eqs.py"
 
         with open(model_py_eqs_path, 'w') as txt_file:  # Just use 'w' mode in 3.x
             for eq in self.diff_eqs:
-                res = eq + " = " + str(self.diff_eqs[eq]) + "\n\n"
+                res = "\t" + "d" + eq + " = " + str(self.diff_eqs[eq]) + "\n\n"
                 res = res.replace("^", "**")
                 txt_file.write(res)
