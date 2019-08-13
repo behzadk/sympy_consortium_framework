@@ -291,11 +291,22 @@ class Model:
         for s in self.strains:
             required_sub += s.substrate_dependences
 
+            # Load AHLs which have an activity on microcin or antitoxin expression
             for m in s.microcins:
                 if m.AHL_inducers is not np.nan:
-                    required_AHL += m.AHL_inducers
-                if m.AHL_inducers is not np.nan:
-                    required_AHL += m.AHL_repressors
+                    for a in m.AHL_inducers:
+                        required_AHL.append(a)
+                if m.AHL_repressors is not np.nan:
+                    for a in m.AHL_repressors:
+                        required_AHL.append(a)
+
+            for v in s.antitoxins:
+                if v.AHL_inducers is not np.nan:
+                    for a in v.AHL_inducers:
+                        required_AHL.append(a)
+                if v.AHL_repressors is not np.nan:
+                    for a in v.AHL_repressors:
+                        required_AHL.append(a)
 
             for m_sens in s.sensitivities:
                 required_microcin += [m_sens]
@@ -330,6 +341,14 @@ class Model:
                 if sub not in required_sub:
                     return False
 
+        # Remove models where a substrate dependency does not exist
+        # for strain in self.strains:
+        #     for sub in strain.substrate_dependences:
+        #         if sub not in self.substrate_ids:
+        #             return False
+
+
+
         # Remove models where antitoxin has no cognate toxin
         for strain in self.strains:
             for v in strain.antitoxins:
@@ -348,6 +367,7 @@ class Model:
 
         # For each substrate
         for s in self.substrate_ids:
+            print(s)
             dS_dt = equation_builder.gen_diff_eq_substrate(s, self.strains)
             self.diff_eqs.update(dS_dt)
 
@@ -380,7 +400,6 @@ class Model:
         symbolic_equations = sympy.Matrix(zeros_list)
 
         for idx, eq_key in enumerate(species_names):
-            print(self.diff_eqs[eq_key])
             symbolic_equations[idx] = sympy.sympify(self.diff_eqs[eq_key], locals=locals())
 
         self.symbolic_equations = symbolic_equations
@@ -480,15 +499,17 @@ class Model:
 
             # Adds param to dict if it is linked to a particulr species, identified by the id tag
             p = row['parameter'] + '_#ID#'
+
             for id in self.all_ids:
                 param_species = p.replace('#ID#', id)
                 if param_species in model_parameters:
                     prior_dict[param_species] = [row['lower_bound'], row['upper_bound']]
                     continue
 
-
         if len(model_parameters) != len(prior_dict):
-            print('mismatch in length of prior dict and model parameters.', len(prior_dict), len(model_parameters))
+            params_missing = [i for i in model_parameters if i not in list(prior_dict.keys())]
+            raise RuntimeError('Mismatch in length of prior dict and model parameters.', 'Prior: ', 
+                len(prior_dict), 'Params needed: ', len(model_parameters), params_missing)
 
 
         with open(sim_params_path, 'w') as f:  # Just use 'w' mode in 3.x
@@ -525,11 +546,9 @@ class Model:
                     continue
 
         if len(model_species) != len(prior_dict):
-            print('mismatch in length of prior dict and model parameters.', len(prior_dict), len(model_species))
-            print(prior_dict)
-            print("")
-            print(model_species)
-            exit()
+            species_missing = [i for i in model_species if i not in list(param_species.keys())]
+            raise RuntimeError('Mismatch in length of prior dict and model species.', 'Prior: ', 
+                len(prior_dict), 'Params needed: ', len(model_parameters), species_missing)
 
 
 

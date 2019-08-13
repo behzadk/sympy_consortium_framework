@@ -3,8 +3,7 @@ import numpy as np
 
 funcs = {
     # Strain growth rate
-    'mu_#N#': '( mu_max_#N# * S_#S# / ( K_#N# + S_#S# ) )',
-
+    'mu_#N#': '( S_#S# / ( K_mu_#S# + S_#S# ) )',
 
     # Induction of bacteriocin expression by AHL
     'k_b_ind_#B#': '( A_#A# ^ nB_#B# / ( KB_#B# ^ nB_#B# + A_#A# ^ nB_#B# ) )',
@@ -16,16 +15,16 @@ funcs = {
     'A_production': 'kA_#A# * N_#N# * C',
 
     # Function defining sensitivity to microcin
-    'omega': '( omega_max_#B# * B_#B#^n_omega_#B# / ( K_omega_#B# ^ n_omega_#B# + B_#B# ^ n_omega_#B# ) )',
+    'omega': '( omega_max_#B# * B_#B# ^ n_omega_#B# / ( K_omega_#B# ^ n_omega_#B# + B_#B# ^ n_omega_#B# ) )',
 
     # Function defining protection by antitoxin V
-    'V_antitoxin': '( K_V_#V# / ( V + K_V_#V# ) )',
+    'V_antitoxin': '( K_V_#V# / ( #V# + K_V_#V# ) )',
 
     # Induction of antitoxin expression by AHL
-    'k_v_ind_#V#': '( A_#A# ^ nV_#V# / ( KV_#V# ^ nV_#V#  + A_#A# ^ nV_#V#) )',
+    'k_v_ind_#V#': '( A_#A# ^ nV_#V# / ( kV_#V# ^ nV_#V#  + A_#A# ^ nV_#V#) )',
 
-    # Repression of bacteriocin expression by AHL
-    'k_v_repr_#B#': '( KB_#B# ^ nV_#V#  / ( KV_#V# ^ nV_#V#  + A_#A# ^ nV_#V# ) )'
+    # Repression of antitoxin expression by AHL
+    'k_v_repr_#V#': '( KB_#V# ^ nV_#V#  / ( kV_#V# ^ nV_#V#  + A_#A# ^ nV_#V# ) )'
 
 }
 
@@ -51,7 +50,7 @@ def gen_strain_growth_diff(strain_id, strain_list):
 
     for strain in strain_list:
         if strain.id is strain_id:
-            dN_dt = dN_dt + ' + N_#N# '
+            dN_dt = dN_dt + ' + N_#N# * mu_max_#N# '
             for s in strain.substrate_dependences:
                 dN_dt = dN_dt + ' * ' + funcs['mu_#N#'].replace('#S#', s.id)
 
@@ -82,7 +81,7 @@ def gen_diff_eq_antitoxin(antitoxin_id, strain_list):
 
         for v in strain.antitoxins:
             if v.id is antitoxin_id:
-                dV_dt = dV_dt + ' + ' + ' kVmax_#V# '
+                dV_dt = dV_dt + ' + ' + ' kV_max_#V# '
 
                 if v.AHL_inducers is not np.nan:
                     # Induction terms
