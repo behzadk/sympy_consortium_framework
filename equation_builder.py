@@ -6,25 +6,25 @@ funcs = {
     'mu_#N#': '( mu_max_#N# * S_#S# / ( K_mu_#S# + S_#S# ) )',
 
     # Induction of bacteriocin expression by AHL
-    'k_b_ind_#B#': '( A_#A# ^ nB_#B# / ( KB_#B# ^ nB_#B# + A_#A# ^ nB_#B# ) )',
+    'k_b_ind_#B#': '( A_#A#^nB_#B# / ( KB_#B#^nB_#B# + A_#A#^nB_#B# ) )',
 
     # Repression of bacteriocin expression by AHL
-    'k_b_repr_#B#': '( KB_#B# ^ nB_#B# / ( KB_#B# ^ nB_#B# + A_#A# ^ nB_#B# ) )',
+    'k_b_repr_#B#': '( KB_#B#^nB_#B# / ( KB_#B#^nB_#B# + A_#A#^nB_#B# ) )',
 
     # Production of an AHL species
     'A_production': 'kA_#A# * N_#N# * C',
 
     # Function defining sensitivity to microcin
-    'omega': '( omega_max_#B# * B_#B# ^ n_omega_#B# / ( K_omega_#B# ^ n_omega_#B# + B_#B# ^ n_omega_#B# ) )',
+    'omega': '( omega_max_#B# * B_#B#^n_omega_#B# / ( K_omega_#B#^n_omega_#B# + B_#B#^n_omega_#B# ) )',
 
     # Function defining production by antitoxin V
     'V_antitoxin': '( K_V_#V# / ( V_#V# + K_V_#V# ) )',
 
     # Induction of antitoxin expression by AHL
-    'k_v_ind_#V#': '( A_#A# ^ nV_#V# / ( kV_#V# ^ nV_#V#  + A_#A# ^ nV_#V#) )',
+    'k_v_ind_#V#': '( A_#A#^nV_#V# / ( kV_#V#^nV_#V#  + A_#A#^nV_#V#) )',
 
     # Repression of antitoxin expression by AHL
-    'k_v_repr_#V#': '( kV_#V# ^ nV_#V#  / ( kV_#V# ^ nV_#V#  + A_#A# ^ nV_#V# ) )'
+    'k_v_repr_#V#': '( kV_#V#^nV_#V#  / ( kV_#V#^nV_#V#  + A_#A#^nV_#V# ) )'
 
 }
 
