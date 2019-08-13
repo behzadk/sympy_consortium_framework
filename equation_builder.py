@@ -56,7 +56,7 @@ def gen_strain_growth_diff(strain_id, strain_list):
 
             # Strain sensitive to microcin, protected by 'antitoxins'
             for m in strain.sensitivities:
-                dN_dt = dN_dt + ' * ' + funcs['omega']
+                dN_dt = dN_dt + ' - ' + funcs['omega']
                 dN_dt = dN_dt.replace('#B#', m)
 
                 # Apply antitoxin function if cognate antitoxin is present.
@@ -73,6 +73,7 @@ def gen_strain_growth_diff(strain_id, strain_list):
     N_key = 'N_#N#'.replace('#N#', strain_id)
 
     return {N_key: dN_dt}
+
 
 def gen_diff_eq_antitoxin(antitoxin_id, strain_list):
     dV_dt = base_eqs['V_#V#']
