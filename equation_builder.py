@@ -3,7 +3,7 @@ import numpy as np
 
 funcs = {
     # Strain growth rate
-    'mu_#N#': '( S_#S# / ( K_mu_#S# + S_#S# ) )',
+    'mu_#N#': '( mu_max_#N# * S_#S# / ( K_mu_#S# + S_#S# ) )',
 
     # Induction of bacteriocin expression by AHL
     'k_b_ind_#B#': '( A_#A# ^ nB_#B# / ( KB_#B# ^ nB_#B# + A_#A# ^ nB_#B# ) )',
@@ -50,13 +50,13 @@ def gen_strain_growth_diff(strain_id, strain_list):
 
     for strain in strain_list:
         if strain.id is strain_id:
-            dN_dt = dN_dt + ' + N_#N# * mu_max_#N# '
+            dN_dt = dN_dt + ' * N_#N# '
             for s in strain.substrate_dependences:
-                dN_dt = dN_dt + ' * ' + funcs['mu_#N#'].replace('#S#', s.id)
+                dN_dt = dN_dt + ' + ' + funcs['mu_#N#'].replace('#S#', s.id)
 
             # Strain sensitive to microcin, protected by 'antitoxins'
             for m in strain.sensitivities:
-                dN_dt = dN_dt + ' - ' + funcs['omega']
+                dN_dt = dN_dt + ' - ( ' + funcs['omega']
                 dN_dt = dN_dt.replace('#B#', m)
 
                 # Apply antitoxin function if cognate antitoxin is present.
@@ -66,14 +66,14 @@ def gen_strain_growth_diff(strain_id, strain_list):
                         dN_dt = dN_dt.replace('#V#', v)
                         break
 
-                dN_dt = dN_dt + ' * N_#N#'
+                dN_dt = dN_dt + ' ) '
 
+                dN_dt = dN_dt + ' * N_#N#'
 
     dN_dt = dN_dt.replace('#N#', strain_id)
     N_key = 'N_#N#'.replace('#N#', strain_id)
 
     return {N_key: dN_dt}
-
 
 def gen_diff_eq_antitoxin(antitoxin_id, strain_list):
     dV_dt = base_eqs['V_#V#']

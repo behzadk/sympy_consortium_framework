@@ -110,7 +110,7 @@ def spock_manu_no_symm():
                                                     max_microcin_parts, max_AHL_parts,
                                                     max_substrate_parts, max_antitoxins, max_microcin_sensitivities=2)
 
-    part_combos = model_space.generate_part_combinations(strain_max_microcin=0, strain_max_AHL=0, strain_max_sub_dependencies=2, strain_max_microcin_sens=0, strain_max_sub_production=1, strain_max_antitoxin=0)
+    part_combos = model_space.generate_part_combinations(strain_max_microcin=0, strain_max_AHL=0, strain_max_sub_dependencies=2, strain_max_microcin_sens=0, strain_max_sub_production=0, strain_max_antitoxin=0)
 
     print("Number of part combinations: ", len(part_combos))
 
@@ -175,7 +175,7 @@ def single_strain_test():
     print("Number of part combinations: ", len(part_combos))
 
     model_space.generate_models()
-    model_space.one_species_filter()
+    # model_space.one_species_filter()
 
     model_space.remove_symmetries()
 
