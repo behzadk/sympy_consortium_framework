@@ -7,7 +7,7 @@ import csv
 import species
 import os
 import utils
-
+from collections import OrderedDict
 
 class Model:
     def __init__(self, model_idx, strain_list):
@@ -22,7 +22,7 @@ class Model:
 
         self.all_ids = self.microcin_ids + self.AHL_ids + self.substrate_ids + self.strain_ids
 
-        self.diff_eqs = {}
+        self.diff_eqs = OrderedDict()
         self.symbolic_equations = None
         self.jac = None
 
@@ -256,6 +256,10 @@ class Model:
             strain_AHLs = strain.AHLs
             for a in strain_AHLs:
                 AHL_id_list.append(a.id)
+        
+        AHL_id_list = list(set(AHL_id_list))
+
+        sorting_func = lambda x: int(x)
 
         return list(set(AHL_id_list))
 
@@ -365,9 +369,9 @@ class Model:
             dN_dt = equation_builder.gen_strain_growth_diff(n.id, self.strains)
             self.diff_eqs.update(dN_dt)
 
+
         # For each substrate
         for s in self.substrate_ids:
-            print(s)
             dS_dt = equation_builder.gen_diff_eq_substrate(s, self.strains)
             self.diff_eqs.update(dS_dt)
 
@@ -394,13 +398,14 @@ class Model:
 
     def build_symbolic_equations(self):
         species_names = list(self.diff_eqs.keys())
+        # print(list(self.diff_eqs.keys()))
         order = sympy.symbols(species_names)
-
         zeros_list = [0 for i in range(len(order))]
         symbolic_equations = sympy.Matrix(zeros_list)
 
         for idx, eq_key in enumerate(species_names):
             symbolic_equations[idx] = sympy.sympify(self.diff_eqs[eq_key], locals=locals())
+            # print(eq_key)
 
         self.symbolic_equations = symbolic_equations
 
@@ -487,8 +492,9 @@ class Model:
 
         model_parameters = self.params_list
         default_params = pd.read_csv(default_params_path)
+        default_params.sort_values('parameter', inplace=True)
 
-        prior_dict = {}
+        prior_dict = OrderedDict()
         for idx, row in default_params.iterrows():
             p = row['parameter']
 
@@ -527,7 +533,7 @@ class Model:
         model_species = self.species_list
         default_species = pd.read_csv(default_init_species_path)
 
-        prior_dict = {}
+        prior_dict = OrderedDict()
         for idx, row in default_species.iterrows():
             p = row['species']
 

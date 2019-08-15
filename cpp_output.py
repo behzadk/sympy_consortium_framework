@@ -76,6 +76,7 @@ class Cpp_source_output:
         cpp_out += '\t//Species order is: '
         for species in m.species_list:
             cpp_out += species + ' '
+
         cpp_out += '\n'
 
         # Unpack differential equations
@@ -128,6 +129,11 @@ class Cpp_source_output:
 
                 cpp_out += jac_str
 
+
+        cpp_out += '\n'
+
+        for idx in range(i):
+            cpp_out += '\tdfdt[' + str(idx) + '] = 0.0;\n'
 
         cpp_out += '\n}\n'
 

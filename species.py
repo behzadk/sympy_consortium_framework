@@ -19,7 +19,7 @@ class Strain:
         self.sensitivities = microcin_sensitivities
         self.substrate_production = substrate_production
         self.antitoxins = antitoxins
-        self.diff_eqs = {}
+        # self.diff_eqs = {}
 
 
 class Microcin:

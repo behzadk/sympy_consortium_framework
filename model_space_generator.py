@@ -130,12 +130,15 @@ class model_space():
         # Consider making this into a lambda function
         microcin_production_lists = [list(i for i in m if i != None) for m in
                                      itertools.combinations(self.microcin_objects + [None], strain_max_microcin)]
+        
+
 
         AHL_production_lists = [list(i for i in a if i != None) for a in
                                 itertools.combinations(self.AHL_objects + [None], strain_max_AHL)]
 
+
         substrate_dependencies_list = [list(i for i in s if i != None) for s in
-                                       itertools.combinations(self.substrate_objects, strain_max_sub_dependencies)]
+                                       itertools.combinations(self.substrate_objects + [None], strain_max_sub_dependencies)]
 
         microcin_sensitivities_list = [list(i for i in m_id if i != None) for m_id in
                                        itertools.combinations(self.microcin_ids + [None], strain_max_microcin_sens)]
@@ -262,9 +265,14 @@ class model_space():
     def spock_manu_model_filter(self):
         keep_list = []
 
+
+
         # keep models with only one strain engineered
         for model in tqdm(self.models_list):
-            if sum(model.adjacency_matrix[:, 0]) == 0 or sum(model.adjacency_matrix[:, 1]) == 0:
+            if not any(model.substrate_ids):
+                continue
+            
+            if sum(model.adjacency_matrix[:, 1]) == 0 and sum(model.adjacency_matrix[2]) == 0 and sum(model.adjacency_matrix[:, 2]) == 2 and model.adjacency_matrix[0][3] == 0:
                 keep_list.append(model)
 
         self.models_list = keep_list

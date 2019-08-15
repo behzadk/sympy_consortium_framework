@@ -45,7 +45,6 @@ def generate_simulation_files(model_list, params_path, init_species_path, output
         m.extract_params()
         m.write_python_equations(output_dir)
 
-
         m.write_prior_parameter_dict(params_path, output_dir)
         m.write_init_species_dict(init_species_path, output_dir)
 
@@ -71,9 +70,9 @@ def spock_manu_no_symm():
     # Set species IDs
     substrate_ids = ['glu', 'trp']
     S_glu = Substrate(substrate_ids[0])
-    S_try = Substrate(substrate_ids[1])
+    S_trp = Substrate(substrate_ids[1])
 
-    substrate_objects = [S_glu, S_try]
+    substrate_objects = [S_glu, S_trp]
 
     AHL_ids = ['1', '2']
     AHL_1 = AHL(AHL_ids[0])
@@ -97,12 +96,12 @@ def spock_manu_no_symm():
     microcin_objects, microcin_configs_df = model_space_generator.generate_microcin_combinations(microcin_ids,
                                                                                                  AHL_objects,
                                                                                                  microcin_induced=True,
-                                                                                                 microcin_repressed=True, microcin_constitutive=True)
+                                                                                                 microcin_repressed=True, microcin_constitutive=False)
 
     antitoxin_objects, antitoxin_configs_df = model_space_generator.generate_antitoxin_combinations(antitoxin_ids,
                                                                                                  AHL_objects,
                                                                                                  antitoxin_induced=True,
-                                                                                                 antitoxin_repressed=True, antitoxin_constitutive=True)
+                                                                                                 antitoxin_repressed=True, antitoxin_constitutive=False)
 
 
     model_space = model_space_generator.model_space(strain_ids, microcin_objects,
@@ -110,7 +109,26 @@ def spock_manu_no_symm():
                                                     max_microcin_parts, max_AHL_parts,
                                                     max_substrate_parts, max_antitoxins, max_microcin_sensitivities=2)
 
-    part_combos = model_space.generate_part_combinations(strain_max_microcin=0, strain_max_AHL=0, strain_max_sub_dependencies=2, strain_max_microcin_sens=0, strain_max_sub_production=0, strain_max_antitoxin=0)
+    part_combos = model_space.generate_part_combinations(strain_max_microcin=1, strain_max_AHL=2, strain_max_sub_dependencies=2, strain_max_microcin_sens=1, strain_max_sub_production=1, strain_max_antitoxin=1)
+    
+    # keep only those that have glu as a dependency and do not produce glu
+    filtered_combos = []
+    for c in part_combos:
+        glu_producer = False
+        for sub in c[4]:
+            if sub.id == "glu":
+                glu_producer = True
+
+        if glu_producer:
+            continue
+
+        for sub in c[2]:
+            if sub.id == "glu":
+                filtered_combos.append(c)
+
+
+
+    part_combos  = filtered_combos
 
     print("Number of part combinations: ", len(part_combos))
 
@@ -242,8 +260,8 @@ def three_species_no_symm():
 
 
 def main():
-    single_strain_test()
-    # spock_manu_no_symm()
+    # single_strain_test()
+    spock_manu_no_symm()
     # three_species_no_symm()
 
 if __name__ == "__main__":

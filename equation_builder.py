@@ -10,6 +10,7 @@ funcs = {
 
     # Repression of bacteriocin expression by AHL
     'k_b_repr_#B#': '( KB_#B#^nB_#B# / ( KB_#B#^nB_#B# + A_#A#^nB_#B# ) )',
+    # 'k_b_repr_#B#': '( 1 / 1 + ( KB_#B# + A_#A# )^nB_#B# )',
 
     # Production of an AHL species
     'A_production': 'kA_#A# * N_#N# * C',
@@ -25,6 +26,7 @@ funcs = {
 
     # Repression of antitoxin expression by AHL
     'k_v_repr_#V#': '( kV_#V#^nV_#V#  / ( kV_#V#^nV_#V#  + A_#A#^nV_#V# ) )'
+    # 'k_v_repr_#V#': '( 1  / 1 + ( A_#A# / kV_#V#)^nV_#V# )'
 
 }
 
@@ -50,9 +52,9 @@ def gen_strain_growth_diff(strain_id, strain_list):
 
     for strain in strain_list:
         if strain.id is strain_id:
-            dN_dt = dN_dt + ' * N_#N# '
+            dN_dt = dN_dt + ' + N_#N# '
             for s in strain.substrate_dependences:
-                dN_dt = dN_dt + ' + ' + funcs['mu_#N#'].replace('#S#', s.id)
+                dN_dt = dN_dt + ' * ' + funcs['mu_#N#'].replace('#S#', s.id)
 
             # Strain sensitive to microcin, protected by 'antitoxins'
             for m in strain.sensitivities:
@@ -68,7 +70,7 @@ def gen_strain_growth_diff(strain_id, strain_list):
 
                 dN_dt = dN_dt + ' ) '
 
-                dN_dt = dN_dt + ' * N_#N#'
+                dN_dt = dN_dt + ' * N_#N# '
 
     dN_dt = dN_dt.replace('#N#', strain_id)
     N_key = 'N_#N#'.replace('#N#', strain_id)
@@ -93,7 +95,7 @@ def gen_diff_eq_antitoxin(antitoxin_id, strain_list):
                     for a in v.AHL_repressors:
                         dV_dt = dV_dt + ' * ' + funcs['k_v_repr_#V#'].replace('#A#', a.id)
 
-                dV_dt = dV_dt + ' * N_#N# * C'
+                dV_dt = dV_dt + ' * N_#N# * C '
                 dV_dt = dV_dt.replace('#N#', strain.id)
 
     dV_dt = dV_dt.replace('#V#', antitoxin_id)
@@ -108,8 +110,8 @@ def gen_diff_eq_substrate(substrate_id, strain_list):
 
     # Term defining consumption of substrate by a strain
     strain_growth_rate = funcs['mu_#N#']
-    strain_consumption = strain_growth_rate + ' * N_#N# * C / g_#N#'
-    strain_production = ' C * N_#N# * p_#S#'
+    strain_consumption = strain_growth_rate + ' * N_#N# * C / g_#N# '
+    strain_production = ' C * N_#N# * p_#S# '
 
     # Sum of all consumption by strains
     for strain in strain_list:
@@ -163,7 +165,7 @@ def gen_microcin_diff_eq(microcin_id, strain_list):
                     for a in b.AHL_repressors:
                         dB_dt = dB_dt + ' * ' + funcs['k_b_repr_#B#'].replace('#A#', a.id)
 
-                dB_dt = dB_dt + ' * N_#N# * C'
+                dB_dt = dB_dt + ' * N_#N# * C '
                 dB_dt = dB_dt.replace('#N#', strain.id)
 
     dB_dt = dB_dt.replace('#B#', microcin_id)
