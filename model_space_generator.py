@@ -264,16 +264,32 @@ class model_space():
 
     def spock_manu_model_filter(self):
         keep_list = []
-
-
-
+        
         # keep models with only one strain engineered
         for model in tqdm(self.models_list):
             if not any(model.substrate_ids):
                 continue
             
-            if sum(model.adjacency_matrix[:, 1]) == 0 and sum(model.adjacency_matrix[2]) == 0 and sum(model.adjacency_matrix[:, 2]) == 2 and model.adjacency_matrix[0][3] == 0:
+            keep = True
+
+            # Only one strain is producing stuff
+            if sum(model.adjacency_matrix[:, 0]) == 0 or sum(model.adjacency_matrix[:, 1]) == 0:
+                pass
+            else:
+                keep = False
+
+            # neither strain produces glucose
+            if sum(model.adjacency_matrix[2]) != 0:
+                keep = False
+
+            # Both strains use glucose
+            if sum(model.adjacency_matrix[:, 2]) != 2:
+                keep = False
+
+            if keep:
                 keep_list.append(model)
+            # if sum(model.adjacency_matrix[:, 1]) == 0 and sum(model.adjacency_matrix[2]) == 0 and sum(model.adjacency_matrix[:, 2]) == 2 and model.adjacency_matrix[0][3] == 0:
+            #     keep_list.append(model)
 
         self.models_list = keep_list
 

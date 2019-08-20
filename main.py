@@ -134,10 +134,12 @@ def spock_manu_no_symm():
 
     model_space.generate_models()
     model_space.spock_manu_model_filter()
+
     model_space.remove_symmetries()
     model_space.reset_model_indexes()
 
     model_list = model_space.models_list
+    # model_list = [model_list[-1]]
 
     generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, output_dir)
     generate_simulation_files(model_list, default_params_path, default_init_species_path, output_dir)
@@ -175,11 +177,11 @@ def single_strain_test():
     microcin_objects, microcin_configs_df = model_space_generator.generate_microcin_combinations(microcin_ids,
                                                                                                  AHL_objects,
                                                                                                  microcin_induced=True,
-                                                                                                 microcin_repressed=False, microcin_constitutive=False)
+                                                                                                 microcin_repressed=True, microcin_constitutive=False)
 
     antitoxin_objects, antitoxin_configs_df = model_space_generator.generate_antitoxin_combinations(antitoxin_ids,
                                                                                                  AHL_objects,
-                                                                                                 antitoxin_induced=False,
+                                                                                                 antitoxin_induced=True,
                                                                                                  antitoxin_repressed=True, antitoxin_constitutive=False)
 
 
@@ -188,12 +190,12 @@ def single_strain_test():
                                                     max_microcin_parts, max_AHL_parts,
                                                     max_substrate_parts, max_antitoxins, max_microcin_sensitivities=2)
 
-    part_combos = model_space.generate_part_combinations(strain_max_microcin=1, strain_max_AHL=1, strain_max_sub_dependencies=1, strain_max_microcin_sens=1, strain_max_sub_production=0, strain_max_antitoxin=1)
+    part_combos = model_space.generate_part_combinations(strain_max_microcin=1, strain_max_AHL=1, strain_max_sub_dependencies=1, strain_max_microcin_sens=1, strain_max_sub_production=1, strain_max_antitoxin=1)
 
     print("Number of part combinations: ", len(part_combos))
 
     model_space.generate_models()
-    # model_space.one_species_filter()
+    model_space.one_species_filter()
 
     model_space.remove_symmetries()
 
@@ -245,7 +247,6 @@ def three_species_no_symm():
 
     print("Generating model list")
     model_list = model_space.generate_models()
-    
     print("generating reference table")
 
     # models_ref_df = model_space.generate_model_reference_table(max_microcin_parts, max_AHL_parts,
