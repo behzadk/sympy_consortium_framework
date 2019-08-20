@@ -72,7 +72,7 @@ def spock_manu_no_symm():
     S_glu = Substrate(substrate_ids[0])
     S_trp = Substrate(substrate_ids[1])
 
-    substrate_objects = [S_glu, S_trp]
+    substrate_objects = [S_glu]
 
     AHL_ids = ['1', '2']
     AHL_1 = AHL(AHL_ids[0])
@@ -109,26 +109,26 @@ def spock_manu_no_symm():
                                                     max_microcin_parts, max_AHL_parts,
                                                     max_substrate_parts, max_antitoxins, max_microcin_sensitivities=2)
 
-    part_combos = model_space.generate_part_combinations(strain_max_microcin=1, strain_max_AHL=2, strain_max_sub_dependencies=2, strain_max_microcin_sens=1, strain_max_sub_production=1, strain_max_antitoxin=1)
+    part_combos = model_space.generate_part_combinations(strain_max_microcin=1, strain_max_AHL=2, strain_max_sub_dependencies=1, strain_max_microcin_sens=1, strain_max_sub_production=1, strain_max_antitoxin=1)
     
     # keep only those that have glu as a dependency and do not produce glu
-    filtered_combos = []
-    for c in part_combos:
-        glu_producer = False
-        for sub in c[4]:
-            if sub.id == "glu":
-                glu_producer = True
+    # filtered_combos = []
+    # for c in part_combos:
+    #     glu_producer = False
+    #     for sub in c[4]:
+    #         if sub.id == "glu":
+    #             glu_producer = True
 
-        if glu_producer:
-            continue
+    #     if glu_producer:
+    #         continue
 
-        for sub in c[2]:
-            if sub.id == "glu":
-                filtered_combos.append(c)
+    #     for sub in c[2]:
+    #         if sub.id == "glu":
+    #             filtered_combos.append(c)
 
 
 
-    part_combos  = filtered_combos
+    # part_combos  = filtered_combos
 
     print("Number of part combinations: ", len(part_combos))
 

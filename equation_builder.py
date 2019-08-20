@@ -13,13 +13,13 @@ funcs = {
     # 'k_b_repr_#B#': '( 1 / 1 + ( KB_#B# + A_#A# )^nB_#B# )',
 
     # Production of an AHL species
-    'A_production': 'kA_#A# * N_#N# * C',
+    'A_production': 'kA_#A# * N_#N#',
 
     # Function defining sensitivity to microcin
     'omega': '( omega_max_#B# * B_#B# )',
 
-    # Function defining protection by antitoxin V
-    'V_antitoxin': '( 1 / ( V_#V# ) )',
+    # Function defining production by antitoxin V
+    'V_antitoxin': '( 1 / ( V_#V# + 1e-50 ) )',
 
     # Induction of antitoxin expression by AHL
     'k_v_ind_#V#': '( A_#A#^nV_#V# / ( kV_#V#^nV_#V#  + A_#A#^nV_#V#) )',
@@ -27,7 +27,6 @@ funcs = {
     # Repression of antitoxin expression by AHL
     'k_v_repr_#V#': '( kV_#V#^nV_#V#  / ( kV_#V#^nV_#V#  + A_#A#^nV_#V# ) )'
     # 'k_v_repr_#V#': '( 1  / 1 + ( A_#A# / kV_#V#)^nV_#V# )'
-
 }
 
 # Base eqs contain the description of species before interactions with other species.
@@ -95,7 +94,7 @@ def gen_diff_eq_antitoxin(antitoxin_id, strain_list):
                     for a in v.AHL_repressors:
                         dV_dt = dV_dt + ' * ' + funcs['k_v_repr_#V#'].replace('#A#', a.id)
 
-                dV_dt = dV_dt + ' * N_#N# * C '
+                dV_dt = dV_dt + ' * N_#N# '
                 dV_dt = dV_dt.replace('#N#', strain.id)
 
     dV_dt = dV_dt.replace('#V#', antitoxin_id)
@@ -110,8 +109,8 @@ def gen_diff_eq_substrate(substrate_id, strain_list):
 
     # Term defining consumption of substrate by a strain
     strain_growth_rate = funcs['mu_#N#']
-    strain_consumption = strain_growth_rate + ' * N_#N# * C / g_#N# '
-    strain_production = ' C * N_#N# * p_#S# '
+    strain_consumption = strain_growth_rate + ' * N_#N# / g_#N# '
+    strain_production = ' N_#N# * p_#S# '
 
     # Sum of all consumption by strains
     for strain in strain_list:
@@ -165,7 +164,7 @@ def gen_microcin_diff_eq(microcin_id, strain_list):
                     for a in b.AHL_repressors:
                         dB_dt = dB_dt + ' * ' + funcs['k_b_repr_#B#'].replace('#A#', a.id)
 
-                dB_dt = dB_dt + ' * N_#N# * C '
+                dB_dt = dB_dt + ' * N_#N# '
                 dB_dt = dB_dt.replace('#N#', strain.id)
 
     dB_dt = dB_dt.replace('#B#', microcin_id)
