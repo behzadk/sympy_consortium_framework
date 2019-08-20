@@ -39,6 +39,5 @@ def check_model_list_repeats(model_list, array_a, array_b):
 		if model_unique:
 			keep_idx.append(idx_a)
 
-	print(len(keep_idx))
 
 

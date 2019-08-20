@@ -1,6 +1,7 @@
 species,lower_bound,upper_bound
 N,0.1,1
-S,0.22,0.22
+S_glu,0.22,0.22
+S_trp,0.01,0.01
 B,1E-80,1E-80
 A,1E-10,1E-10
 V,1E-80,1E-80

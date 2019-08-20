@@ -31,7 +31,7 @@ class PowForDoubleStar(ast.NodeTransformer):
         return node
 
 
-def generate_simulation_files(model_list, output_dir):
+def generate_simulation_files(model_list, params_path, init_species_path, output_dir):
     utils.make_folder(output_dir)
     print("Number of legal models: ", len(model_list))
     print("building equations and writing input files")
@@ -45,11 +45,8 @@ def generate_simulation_files(model_list, output_dir):
         m.extract_params()
         m.write_python_equations(output_dir)
 
-        default_params_path = './default_params/default_params.csv'
-        default_init_species_path = './default_params/default_init_species.csv'
-
-        m.write_prior_parameter_dict(default_params_path, output_dir)
-        m.write_init_species_dict(default_init_species_path, output_dir)
+        m.write_prior_parameter_dict(params_path, output_dir)
+        m.write_init_species_dict(init_species_path, output_dir)
 
     print("Writing source and header files")
     cpp_out = Cpp_source_output(model_list)
@@ -57,25 +54,25 @@ def generate_simulation_files(model_list, output_dir):
     header = Cpp_header_output(model_list)
     header.write_header_file(output_dir)
 
-def generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, output_dir):
+def generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, output_dir):
     utils.make_folder(output_dir)
 
     for idx, m in enumerate(model_list):
-        m.write_adj_matrix(output_dir, microcin_ids, AHL_ids, strain_ids, substrate_ids)
+        m.write_adj_matrix(output_dir, microcin_ids, AHL_ids, strain_ids, substrate_ids, antitoxin_ids)
 
 
-def two_species_no_symm():
+def spock_manu_no_symm():
     output_dir = "./output/input_files_two_species_spock_manu_0/"
 
-    default_params_path = './default_params/default_params.csv'
-    default_init_species_path = './default_params/default_init_species.csv'
+    default_params_path = './default_params/spock_manu/default_params_spock_manu.csv'
+    default_init_species_path = './default_params/spock_manu/default_init_species_spock_manu.csv'
 
     # Set species IDs
-    substrate_ids = ['glu', 'lys']
+    substrate_ids = ['glu', 'trp']
     S_glu = Substrate(substrate_ids[0])
-    S_lys = Substrate(substrate_ids[0])
+    S_trp = Substrate(substrate_ids[1])
 
-    substrate_objects = [S_glu, S_lys]
+    substrate_objects = [S_glu, S_trp]
 
     AHL_ids = ['1', '2']
     AHL_1 = AHL(AHL_ids[0])
@@ -84,7 +81,8 @@ def two_species_no_symm():
     AHL_objects = [AHL_1, AHL_2]
 
 
-    microcin_ids = ['1', '2']
+    microcin_ids = ['1']
+    antitoxin_ids = ['1'] # Name of antitoxins must match name of microcins.(B_#ID# format)
     strain_ids = ['1', '2']
 
     # Numerical maximum number of parts
@@ -92,32 +90,122 @@ def two_species_no_symm():
     max_microcin_parts = len(microcin_ids)
     max_AHL_parts = len(AHL_objects)
     max_strains_parts = len(strain_ids)
+    max_antitoxins = len(antitoxin_ids)
 
     # Generate microcin expression objects from AHLs and microcins
     microcin_objects, microcin_configs_df = model_space_generator.generate_microcin_combinations(microcin_ids,
                                                                                                  AHL_objects,
                                                                                                  microcin_induced=True,
-                                                                                                 microcin_repressed=True, microcin_constitutive=True)
+                                                                                                 microcin_repressed=True, microcin_constitutive=False)
+
+    antitoxin_objects, antitoxin_configs_df = model_space_generator.generate_antitoxin_combinations(antitoxin_ids,
+                                                                                                 AHL_objects,
+                                                                                                 antitoxin_induced=True,
+                                                                                                 antitoxin_repressed=True, antitoxin_constitutive=False)
 
 
     model_space = model_space_generator.model_space(strain_ids, microcin_objects,
-                                                    AHL_objects, substrate_objects,
+                                                    AHL_objects, substrate_objects, antitoxin_objects,
                                                     max_microcin_parts, max_AHL_parts,
-                                                    max_substrate_parts, max_microcin_sensitivities=2)
+                                                    max_substrate_parts, max_antitoxins, max_microcin_sensitivities=2)
 
-    part_combos = model_space.generate_part_combinations(strain_max_microcin=1, strain_max_AHL=2, strain_max_sub_dependencies=1, strain_max_microcin_sens=2, strain_max_sub_production=1)
+    part_combos = model_space.generate_part_combinations(strain_max_microcin=1, strain_max_AHL=2, strain_max_sub_dependencies=2, strain_max_microcin_sens=1, strain_max_sub_production=1, strain_max_antitoxin=1)
+    
+    # keep only those that have glu as a dependency and do not produce glu
+    filtered_combos = []
+    for c in part_combos:
+        glu_producer = False
+        for sub in c[4]:
+            if sub.id == "glu":
+                glu_producer = True
+
+        if glu_producer:
+            continue
+
+        for sub in c[2]:
+            if sub.id == "glu":
+                filtered_combos.append(c)
+
+
+
+    part_combos  = filtered_combos
 
     print("Number of part combinations: ", len(part_combos))
 
     model_space.generate_models()
     model_space.spock_manu_model_filter()
+
     model_space.remove_symmetries()
     model_space.reset_model_indexes()
 
     model_list = model_space.models_list
+    # model_list = [model_list[-1]]
 
-    generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, output_dir)
-    generate_simulation_files(model_list, output_dir)
+    generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, output_dir)
+    generate_simulation_files(model_list, default_params_path, default_init_species_path, output_dir)
+
+def single_strain_test():
+    output_dir = "./output/input_files_one_species_0/"
+
+    default_params_path = './default_params/spock_manu/default_params_spock_manu.csv'
+    default_init_species_path = './default_params/spock_manu/default_init_species_spock_manu.csv'
+
+    # Set species IDs
+    substrate_ids = ['glu']
+    S_glu = Substrate(substrate_ids[0])
+
+    substrate_objects = [S_glu]
+
+    AHL_ids = ['1']
+    AHL_1 = AHL(AHL_ids[0])
+
+    AHL_objects = [AHL_1]
+
+
+    microcin_ids = ['1']
+    antitoxin_ids = ['1'] # Name of antitoxins must match name of microcins.(B_#ID# format)
+    strain_ids = ['1']
+
+    # Numerical maximum number of parts
+    max_substrate_parts = len(substrate_objects)
+    max_microcin_parts = len(microcin_ids)
+    max_AHL_parts = len(AHL_objects)
+    max_strains_parts = len(strain_ids)
+    max_antitoxins = len(antitoxin_ids)
+
+    # Generate microcin expression objects from AHLs and microcins
+    microcin_objects, microcin_configs_df = model_space_generator.generate_microcin_combinations(microcin_ids,
+                                                                                                 AHL_objects,
+                                                                                                 microcin_induced=True,
+                                                                                                 microcin_repressed=True, microcin_constitutive=False)
+
+    antitoxin_objects, antitoxin_configs_df = model_space_generator.generate_antitoxin_combinations(antitoxin_ids,
+                                                                                                 AHL_objects,
+                                                                                                 antitoxin_induced=True,
+                                                                                                 antitoxin_repressed=True, antitoxin_constitutive=False)
+
+
+    model_space = model_space_generator.model_space(strain_ids, microcin_objects,
+                                                    AHL_objects, substrate_objects, antitoxin_objects,
+                                                    max_microcin_parts, max_AHL_parts,
+                                                    max_substrate_parts, max_antitoxins, max_microcin_sensitivities=2)
+
+    part_combos = model_space.generate_part_combinations(strain_max_microcin=1, strain_max_AHL=1, strain_max_sub_dependencies=1, strain_max_microcin_sens=1, strain_max_sub_production=1, strain_max_antitoxin=1)
+
+    print("Number of part combinations: ", len(part_combos))
+
+    model_space.generate_models()
+    model_space.one_species_filter()
+
+    model_space.remove_symmetries()
+
+    model_space.reset_model_indexes()
+
+    model_list = model_space.models_list
+
+    generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, output_dir)
+    generate_simulation_files(model_list, default_params_path, default_init_species_path, output_dir)
+
 
 def three_species_no_symm():
     output_dir = "./output/input_files_three_species_0/"
@@ -159,7 +247,6 @@ def three_species_no_symm():
 
     print("Generating model list")
     model_list = model_space.generate_models()
-
     print("generating reference table")
 
     # models_ref_df = model_space.generate_model_reference_table(max_microcin_parts, max_AHL_parts,
@@ -169,11 +256,13 @@ def three_species_no_symm():
     generate_simulation_files(model_list, output_dir)
 
     print("generating generate_adjacency_matricies")
-    generate_adjacency_matricies(model_list, microcin_ids, AHL_ids, strain_ids, output_dir)
+
+    generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, output_dir)
 
 
 def main():
-    two_species_no_symm()
+    # single_strain_test()
+    spock_manu_no_symm()
     # three_species_no_symm()
 
 if __name__ == "__main__":

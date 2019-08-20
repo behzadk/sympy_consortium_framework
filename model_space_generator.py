@@ -51,18 +51,64 @@ def generate_microcin_combinations(microcin_ids, AHL_objects, microcin_induced=F
 
     return microcin_objects, microcin_config_df
 
+##
+# Generates microcin objects for all combinations, given a list of AHL objects and information on
+# if microcin can be induced, repressed, or constitutively expressed. Currently assumes only one AHl can mediate
+# expression at any one time.
+#
+# @param microcin_ids - List of possible ids for microcin, a proxy for the number of independent microcin
+# @param AHL_objects - A list containing AHL objects
+# @param microcin_induced - Determines whether microcin can be induced by AHL
+# @param microcin_repressed - Determines whether microcin can be repressed by AHL
+# @param microcin_constitutive - Determines whether microcin can be constitutively expressed
+##
+def generate_antitoxin_combinations(antitoxin_ids, AHL_objects, antitoxin_induced=False,
+                                   antitoxin_repressed=False, antitoxin_constitutive=False):
+    antitoxin_config_idx = 0
+    antitoxin_objects = []
+    antitoxin_config_data = []  # Microcin reference contains - config index, microcin_id, inducer_id, repressor_id, constitutive
+
+    if antitoxin_induced is True:
+        for AHL in AHL_objects:
+            for v_id in antitoxin_ids:
+                antitoxin_objects.append(species.Antitoxin(antitoxin_config_idx, v_id, [AHL], []))
+                config_data = [antitoxin_config_idx, v_id, AHL.id, np.nan]
+                antitoxin_config_data.append(config_data)
+                antitoxin_config_idx += 1
+
+    if antitoxin_repressed is True:
+        for AHL in AHL_objects:
+            for v_id in antitoxin_ids:
+                antitoxin_objects.append(species.Antitoxin(antitoxin_config_idx, v_id, [], [AHL]))
+
+                config_data = [antitoxin_config_idx, v_id, np.nan, AHL.id]
+                antitoxin_config_data.append(config_data)
+
+                antitoxin_config_idx += 1
+
+    if antitoxin_constitutive is True:
+        for v_id in antitoxin_ids:
+            antitoxin_objects.append(species.Antitoxin(antitoxin_config_idx, v_id, np.nan, np.nan, constitutive_expression=True))
+            antitoxin_config_idx += 1
+
+    antitoxin_config_df = pd.DataFrame(columns=["antitoxin_idx", "antitoxin_id", "inducer_id", "repressor_id"],
+                                      data=antitoxin_config_data)
+
+    return antitoxin_objects, antitoxin_config_df
+
 
 ##
 # Generates strain objects for all combinations, given a list of microcin objects and substrate objects
 ##
 class model_space():
-    def __init__(self, strain_ids, microcin_objects, AHL_objects, substrate_objects,
-                 max_microcin_parts, max_AHL_parts, max_substrate_dependencies, max_microcin_sensitivities=1):
+    def __init__(self, strain_ids, microcin_objects, AHL_objects, substrate_objects, antitoxin_objects,
+                 max_microcin_parts, max_AHL_parts, max_substrate_dependencies, max_antitoxins, max_microcin_sensitivities=1):
         self.strain_ids = strain_ids
         self.strain_objects = []
         self.microcin_objects = microcin_objects
         self.AHL_objects = AHL_objects
         self.substrate_objects = substrate_objects
+        self.antitoxin_objects = antitoxin_objects
 
         self.microcin_ids = list(set([m.id for m in microcin_objects]))
 
@@ -74,9 +120,9 @@ class model_space():
         self.max_AHL_parts = max_AHL_parts
         self.max_substrate_parts = max_substrate_dependencies
         self.max_microcin_sensitivities = max_microcin_sensitivities
+        self.max_antitoxins = max_antitoxins
 
-
-    def generate_part_combinations(self, strain_max_microcin, strain_max_AHL, strain_max_sub_dependencies, strain_max_microcin_sens, strain_max_sub_production):
+    def generate_part_combinations(self, strain_max_microcin, strain_max_AHL, strain_max_sub_dependencies, strain_max_microcin_sens, strain_max_sub_production, strain_max_antitoxin):
         # Construct possible combinations for each part. [None] added to AHL production, microcin production and
         # microcin sensitivity represent empty part. The purpose of this is so we generate combinations with one or more
         # of each part.
@@ -84,12 +130,15 @@ class model_space():
         # Consider making this into a lambda function
         microcin_production_lists = [list(i for i in m if i != None) for m in
                                      itertools.combinations(self.microcin_objects + [None], strain_max_microcin)]
+        
+
 
         AHL_production_lists = [list(i for i in a if i != None) for a in
                                 itertools.combinations(self.AHL_objects + [None], strain_max_AHL)]
 
+
         substrate_dependencies_list = [list(i for i in s if i != None) for s in
-                                       itertools.combinations(self.substrate_objects, strain_max_sub_dependencies)]
+                                       itertools.combinations(self.substrate_objects + [None], strain_max_sub_dependencies)]
 
         microcin_sensitivities_list = [list(i for i in m_id if i != None) for m_id in
                                        itertools.combinations(self.microcin_ids + [None], strain_max_microcin_sens)]
@@ -97,6 +146,8 @@ class model_space():
         substrate_production_list = [list(i for i in s if i != None) for s in
                                        itertools.combinations(self.substrate_objects  + [None], strain_max_sub_production)]
 
+        antitoxin_list = [list(i for i in v if i != None) for v in
+                                       itertools.combinations(self.antitoxin_objects  + [None], strain_max_antitoxin)]
 
         # Append empty list representing no production or sensitivity, only necessarry if more than two max parts
         if strain_max_AHL > 1:
@@ -114,13 +165,17 @@ class model_space():
         if strain_max_sub_production > 1:
             substrate_production_list.append([])
         
+        if strain_max_antitoxin > 1:
+            antitoxin_list.append([])
+
         # Generate all different combinations of parts
         for m in microcin_production_lists:
             for a in AHL_production_lists:
                 for s in substrate_dependencies_list:
                     for sensi in microcin_sensitivities_list:
                         for s_prod in substrate_production_list:
-                            self.part_combinations.append([m, a, s, sensi, s_prod])
+                            for v in antitoxin_list:
+                                self.part_combinations.append([m, a, s, sensi, s_prod, v])
 
         return self.part_combinations
 
@@ -128,9 +183,7 @@ class model_space():
         all_adj_mats = []
         keep_idx_0 = []
 
-        # utils.check_model_list_repeats(self.models_list, 0, 0)
-        # Check for direct matches
-
+        # Check for direct matches where two adjacency matrices match
         print("Removing direct symmetries")
         for idx, model in enumerate(tqdm(self.models_list)):
             if any(np.array_equal(x, model.adjacency_matrix) for x in all_adj_mats):
@@ -158,6 +211,8 @@ class model_space():
         keep_idx_1 = []
 
         print("Removing indirect symmetries")
+
+        # Shuffles the strain columns and compares to 
         for idx in tqdm(keep_idx_0):
             permute_strains = list(itertools.permutations(strains_index_range))
             original_config = permute_strains[0]
@@ -166,13 +221,12 @@ class model_space():
             match = False
             for perm in permute_strains[1:]:
                 new_adj = model_adj.copy()
+                # Shuffle first configuration to new configuration
                 new_adj.T[[original_config]] = new_adj.T[[perm]]
-                new_adj[[original_config]] = new_adj[[perm]]
-
+                # new_adj[[original_config]] = new_adj[[perm]]
                 if any(np.array_equal(x, new_adj) for x in clean_stage_1_adj_mats):
                     match = True
                     break
-
             if match is False:
                 keep_idx_1.append(idx)
         
@@ -185,7 +239,7 @@ class model_space():
         system_combinations = itertools.combinations(self.part_combinations, len(self.strain_ids))
         total_sys = 0
 
-        for sys in system_combinations:
+        for sys in tqdm(system_combinations):
             model_strains = []
             for idx, N_id in enumerate(self.strain_ids):
                 new_strain = species.Strain(N_id, *sys[idx])
@@ -193,12 +247,13 @@ class model_space():
 
             new_model = model.Model(model_idx, model_strains)
 
-            new_model.generate_adjacency_matrix(self.max_substrate_parts, self.max_AHL_parts, self.max_microcin_parts, len(self.strain_ids))
-            total_sys += 1
 
             if new_model.is_legal():
                 self.models_list.append(new_model)
                 model_idx += 1
+                new_model.generate_adjacency_matrix(self.max_substrate_parts, self.max_AHL_parts, self.max_microcin_parts, len(self.strain_ids), self.max_antitoxins)
+                total_sys += 1
+
 
         print("Number of systems: ", total_sys)
 
@@ -209,13 +264,45 @@ class model_space():
 
     def spock_manu_model_filter(self):
         keep_list = []
-
+        
         # keep models with only one strain engineered
         for model in tqdm(self.models_list):
+            if not any(model.substrate_ids):
+                continue
+            
+            keep = True
+
+            # Only one strain is producing stuff
             if sum(model.adjacency_matrix[:, 0]) == 0 or sum(model.adjacency_matrix[:, 1]) == 0:
+                pass
+            else:
+                keep = False
+
+            # neither strain produces glucose
+            if sum(model.adjacency_matrix[2]) != 0:
+                keep = False
+
+            # Both strains use glucose
+            if sum(model.adjacency_matrix[:, 2]) != 2:
+                keep = False
+
+            if keep:
+                keep_list.append(model)
+            # if sum(model.adjacency_matrix[:, 1]) == 0 and sum(model.adjacency_matrix[2]) == 0 and sum(model.adjacency_matrix[:, 2]) == 2 and model.adjacency_matrix[0][3] == 0:
+            #     keep_list.append(model)
+
+        self.models_list = keep_list
+
+    def one_species_filter(self):
+        keep_list = []
+
+        for model in tqdm(self.models_list):
+            if sum(model.adjacency_matrix[:, 0]) == 3 and sum(model.adjacency_matrix[:, 2]) == -1:
                 keep_list.append(model)
 
         self.models_list = keep_list
+
+
 
     def generate_model_reference_table(self, max_microcin_parts, max_AHL_parts,
                                        max_substrate_dependencies, max_microcin_sensitivities):
