@@ -16,7 +16,7 @@ funcs = {
     'A_production': 'kA_#A# * N_#N# * C',
 
     # Function defining sensitivity to microcin
-    'omega': '( omega_max_#B# * B_#B#^n_omega_#B# / ( K_omega_#B#^n_omega_#B# + B_#B#^n_omega_#B# ) )',
+    'omega': '( omega_max_#B# * B_#B# )',
 
     # Function defining production by antitoxin V
     'V_antitoxin': '( K_V_#V# / ( V_#V# + K_V_#V# ) )',
