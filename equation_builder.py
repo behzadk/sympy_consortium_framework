@@ -18,8 +18,8 @@ funcs = {
     # Function defining sensitivity to microcin
     'omega': '( omega_max_#B# * B_#B# )',
 
-    # Function defining production by antitoxin V
-    'V_antitoxin': '( K_V_#V# / ( V_#V# + K_V_#V# ) )',
+    # Function defining protection by antitoxin V
+    'V_antitoxin': '( 1 / ( V_#V# ) )',
 
     # Induction of antitoxin expression by AHL
     'k_v_ind_#V#': '( A_#A#^nV_#V# / ( kV_#V#^nV_#V#  + A_#A#^nV_#V#) )',
