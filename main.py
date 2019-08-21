@@ -68,9 +68,9 @@ def spock_manu_no_symm():
     default_init_species_path = './default_params/spock_manu/default_init_species_spock_manu.csv'
 
     # Set species IDs
-    substrate_ids = ['glu', 'trp']
+    substrate_ids = ['glu']
     S_glu = Substrate(substrate_ids[0])
-    S_trp = Substrate(substrate_ids[1])
+    # S_trp = Substrate(substrate_ids[1])
 
     substrate_objects = [S_glu]
 
@@ -100,8 +100,8 @@ def spock_manu_no_symm():
 
     antitoxin_objects, antitoxin_configs_df = model_space_generator.generate_antitoxin_combinations(antitoxin_ids,
                                                                                                  AHL_objects,
-                                                                                                 antitoxin_induced=True,
-                                                                                                 antitoxin_repressed=True, antitoxin_constitutive=False)
+                                                                                                 antitoxin_induced=False,
+                                                                                                 antitoxin_repressed=False, antitoxin_constitutive=False)
 
 
     model_space = model_space_generator.model_space(strain_ids, microcin_objects,
@@ -109,7 +109,7 @@ def spock_manu_no_symm():
                                                     max_microcin_parts, max_AHL_parts,
                                                     max_substrate_parts, max_antitoxins, max_microcin_sensitivities=2)
 
-    part_combos = model_space.generate_part_combinations(strain_max_microcin=1, strain_max_AHL=2, strain_max_sub_dependencies=1, strain_max_microcin_sens=1, strain_max_sub_production=1, strain_max_antitoxin=1)
+    part_combos = model_space.generate_part_combinations(strain_max_microcin=1, strain_max_AHL=2, strain_max_sub_dependencies=1, strain_max_microcin_sens=1, strain_max_sub_production=0, strain_max_antitoxin=0)
     
     # keep only those that have glu as a dependency and do not produce glu
     # filtered_combos = []
