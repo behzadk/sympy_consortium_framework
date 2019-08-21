@@ -20,6 +20,7 @@ funcs = {
 
     # Function defining production by antitoxin V
     'V_antitoxin': '( 1 / ( V_#V#) )',
+    #'V_antitoxin': '( K_V_#V# / ( V_#V# + K_V_#V# ) )',
 
     # Induction of antitoxin expression by AHL
     'k_v_ind_#V#': '( A_#A#^nV_#V# / ( kV_#V#^nV_#V#  + A_#A#^nV_#V#) )',
