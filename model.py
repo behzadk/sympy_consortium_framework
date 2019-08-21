@@ -20,8 +20,9 @@ class Model:
         self.substrate_ids = self.get_substrate_species()
         self.antitoxin_ids = self.get_antitoxin_species()
         self.immunity_ids = self.get_immunity_species()
+        self.toxin_ids = self.get_toxin_species()
 
-        self.all_ids = self.microcin_ids + self.AHL_ids + self.substrate_ids + self.strain_ids + self.immunity_ids
+        self.all_ids = self.microcin_ids + self.AHL_ids + self.substrate_ids + self.strain_ids + self.immunity_ids + self.toxin_ids
 
         self.diff_eqs = OrderedDict()
         self.symbolic_equations = None
@@ -172,13 +173,13 @@ class Model:
                     to_node = t_idx + toxin_init_idx
                     adjacency_matrix[to_node, from_node] = 1
 
-            # Antitoxin inhibition of mic
+            # Antitoxin inhibition of toxin
             for v_idx, v in enumerate(all_antitoxin_ids):
                 from_node = v_idx + antitoxin_init_idx
 
-                for mic_idx, mic in enumerate(all_microcin_ids):
+                for toxin_idx, toxin in enumerate(all_toxin_ids):
                     if v.split('_')[-1] == mic:
-                        to_node = mic_idx + microcin_init_idx
+                        to_node = toxin_idx + toxin_init_idx
                         adjacency_matrix[to_node, from_node] = -1
                         
             # Immunity inhibition of mic
@@ -457,6 +458,14 @@ class Model:
                     for a in i.AHL_repressors:
                         required_AHL.append(a)
 
+            for t in s.toxins:
+                if t.AHL_inducers is not np.nan:
+                    for a in t.AHL_inducers:
+                        required_AHL.append(a)
+                if t.AHL_repressors is not np.nan:
+                    for a in t.AHL_repressors:
+                        required_AHL.append(a)
+
 
             for m_sens in s.sensitivities:
                 required_microcin += [m_sens]
@@ -543,7 +552,7 @@ class Model:
 
         # For each immunity
         for t in self.toxin_ids:
-            dI_dt = equation_builder.gen_toxin_diff_eq(i, self.strains)
+            dT_dt = equation_builder.gen_toxin_diff_eq(t, self.strains)
             self.diff_eqs.update(dT_dt)
 
 
@@ -624,13 +633,19 @@ class Model:
 
         new_immunity_ids = []
         for idx, i in enumerate(immunity_ids):
-            new_antitoxin_ids.append("I_" + i)
+            new_immunity_ids.append("I_" + i)
+
+
+        new_toxin_ids = []
+        for idx, i in enumerate(toxin_ids):
+            new_toxin_ids.append("I_" + i)
+
 
         adj_matrix = self.adjacency_matrix
 
         with open(adj_mat_path, 'w') as f:
             w = csv.writer(f)
-            adj_mat_species = new_strain_ids + new_substrate_ids + new_mic_ids + new_AHL_ids + new_antitoxin_ids + new_immunity_ids
+            adj_mat_species = new_strain_ids + new_substrate_ids + new_mic_ids + new_AHL_ids + new_antitoxin_ids + new_immunity_ids + new_toxin_ids
             header = [None] + adj_mat_species
             w.writerow(header)
 

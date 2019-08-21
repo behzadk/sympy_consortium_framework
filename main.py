@@ -99,7 +99,7 @@ def spock_manu_no_symm():
     # Generate microcin expression objects from AHLs and microcins
     microcin_objects, microcin_configs_df = model_space_generator.generate_microcin_combinations(microcin_ids,
                                                                                                  AHL_objects,
-                                                                                                 microcin_induced=True,
+                                                                                                 microcin_induced=False,
                                                                                                  microcin_repressed=False, microcin_constitutive=False)
 
     antitoxin_objects, antitoxin_configs_df = model_space_generator.generate_antitoxin_combinations(antitoxin_ids,
@@ -109,8 +109,8 @@ def spock_manu_no_symm():
 
     immunity_objects, immunity_configs_df = model_space_generator.generate_immunity_combinations(immunity_ids,
                                                                                                  AHL_objects,
-                                                                                                 immunity_induced=True,
-                                                                                                 immunity_repressed=True, immunity_constitutive=False)
+                                                                                                 immunity_induced=False,
+                                                                                                 immunity_repressed=False, immunity_constitutive=False)
 
 
     toxin_objects, toxin_configs_df = model_space_generator.generate_toxin_combinations(toxin_ids,
@@ -159,7 +159,7 @@ def spock_manu_no_symm():
     model_list = model_space.models_list
     # model_list = [model_list[-1]]
 
-    generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, immunity_ids, output_dir)
+    generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, immunity_ids, toxin_ids, output_dir)
     generate_simulation_files(model_list, default_params_path, default_init_species_path, output_dir)
 
 def single_strain_test():

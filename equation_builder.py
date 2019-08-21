@@ -39,7 +39,7 @@ funcs = {
     'k_i_repr_#I#': '( kI_#I#^nI_#I#  / ( kI_#I#^nI_#I#  + A_#A#^nI_#I# ) )',
 
     # Induction of toxin expression by AHL
-    'k_t_tnd_#T#': '( A_#A#^nT_#T# / ( kT_#T#^nT_#T#  + A_#A#^nT_#T#) )',
+    'k_t_ind_#T#': '( A_#A#^nT_#T# / ( kT_#T#^nT_#T#  + A_#A#^nT_#T#) )',
 
     # Repression of toxin expression by AHL
     'k_t_repr_#T#': '( kT_#T#^nT_#T#  / ( kT_#T#^nT_#T#  + A_#A#^nT_#T# ) )'
