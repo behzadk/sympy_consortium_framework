@@ -19,7 +19,7 @@ funcs = {
     'omega': '( omega_max_#B# * B_#B# )',
 
     # Function defining production by antitoxin V
-    'V_antitoxin': '( 1 / ( V_#V# + 1e-60 ) )',
+    'V_antitoxin': '( 1 / ( V_#V#) )',
 
     # Induction of antitoxin expression by AHL
     'k_v_ind_#V#': '( A_#A#^nV_#V# / ( kV_#V#^nV_#V#  + A_#A#^nV_#V#) )',
@@ -27,7 +27,6 @@ funcs = {
     # Repression of antitoxin expression by AHL
     'k_v_repr_#V#': '( kV_#V#^nV_#V#  / ( kV_#V#^nV_#V#  + A_#A#^nV_#V# ) )'
     # 'k_v_repr_#V#': '( 1  / 1 + ( A_#A# / kV_#V#)^nV_#V# )'
-
 }
 
 # Base eqs contain the description of species before interactions with other species.
