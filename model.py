@@ -19,8 +19,9 @@ class Model:
         self.microcin_ids = self.get_microcin_species()
         self.substrate_ids = self.get_substrate_species()
         self.antitoxin_ids = self.get_antitoxin_species()
+        self.immunity_ids = self.get_immunity_species()
 
-        self.all_ids = self.microcin_ids + self.AHL_ids + self.substrate_ids + self.strain_ids
+        self.all_ids = self.microcin_ids + self.AHL_ids + self.substrate_ids + self.strain_ids + self.immunity_ids
 
         self.diff_eqs = OrderedDict()
         self.symbolic_equations = None
@@ -35,9 +36,9 @@ class Model:
         # AHL rhs
 
     # edges show interactions between species from j (column) to i (row)
-    def generate_adjacency_matrix(self, max_sub, max_AHL, max_mic, max_strains, max_antitoxin):
+    def generate_adjacency_matrix(self, max_sub, max_AHL, max_mic, max_strains, max_antitoxin, max_immunity, max_toxin):
         # Cell1, Cell2, M1, M2, AHL1, AHL2, V1, V2
-        total_species = max_AHL + max_mic + max_strains + max_sub + max_antitoxin
+        total_species = max_AHL + max_mic + max_strains + max_sub + max_antitoxin + max_immunity + max_toxin
         # total_species = len(self.AHL_ids) + len(self.microcin_ids) + len(self.strain_ids)
         adjacency_matrix = np.zeros([total_species, total_species])
 
@@ -46,6 +47,8 @@ class Model:
         microcin_init_idx = substrate_init_idx + max_sub
         AHL_init_idx = microcin_init_idx + max_mic
         antitoxin_init_idx = AHL_init_idx + max_AHL
+        immunity_init_idx = antitoxin_init_idx + max_antitoxin
+        toxin_init_idx = immunity_init_idx + max_immunity
 
         all_microcin_objects = []
         all_microcin_ids = []
@@ -53,6 +56,12 @@ class Model:
         all_substrates = []
         all_antitoxin_objects = []
         all_antitoxin_ids = []
+        
+        all_toxin_ids = []
+        all_toxin_objects = []
+
+        all_immunity_ids = []
+        all_immunity_objects = []
 
         # Collect species objects
         for strain in self.strains:
@@ -81,6 +90,13 @@ class Model:
 
                 if v.id not in all_antitoxin_ids:
                     all_antitoxin_ids.append(v.id)
+            
+            for t in strain.toxins:
+                if t not in all_toxin_objects:
+                    all_toxin_objects.append(t)
+
+                if t.id not in all_toxin_ids:
+                    all_toxin_ids.append(t.id)
 
 
         # Fill strain sensitivities to microcin sensitivity is a negative interaction from
@@ -138,12 +154,39 @@ class Model:
                     to_node = v_idx + antitoxin_init_idx
                     adjacency_matrix[to_node, from_node] = 1
 
+            # Immuity production
+            for strain_immunity in strain.immunity:
+                i_produced_idx = [all_immunity_ids.index(x.id) for i, x in enumerate(all_immunity_objects) if x == strain_immunity]
+
+                for i_idx in i_produced_idx:
+                    from_node = idx_strain + strain_init_idx
+                    to_node = i_idx + immunity_init_idx
+                    adjacency_matrix[to_node, from_node] = 1
+
+            # Toxin production
+            for strain_toxin in strain.toxins:
+                t_produced_idx = [all_toxin_ids.index(x.id) for i, x in enumerate(all_toxin_objects) if x == strain_toxin]
+
+                for t_idx in t_produced_idx:
+                    from_node = idx_strain + strain_init_idx
+                    to_node = t_idx + toxin_init_idx
+                    adjacency_matrix[to_node, from_node] = 1
+
             # Antitoxin inhibition of mic
             for v_idx, v in enumerate(all_antitoxin_ids):
                 from_node = v_idx + antitoxin_init_idx
 
                 for mic_idx, mic in enumerate(all_microcin_ids):
                     if v.split('_')[-1] == mic:
+                        to_node = mic_idx + microcin_init_idx
+                        adjacency_matrix[to_node, from_node] = -1
+                        
+            # Immunity inhibition of mic
+            for i_idx, i in enumerate(all_immunity_ids):
+                from_node = i_idx + immunity_init_idx
+
+                for mic_idx, mic in enumerate(all_microcin_ids):
+                    if i.split('_')[-1] == mic:
                         to_node = mic_idx + microcin_init_idx
                         adjacency_matrix[to_node, from_node] = -1
 
@@ -230,6 +273,82 @@ class Model:
                 except(IndexError):
                     pass
 
+            # AHL toxin interactions from AHL to V
+            for t in all_toxin_objects:
+                t_idx = all_toxin_ids.index(t.id)
+
+                # Repressors
+                try:
+                    if t.AHL_repressors is np.nan:
+                        continue
+
+                    repressor = t.AHL_repressors[0]
+                    AHL_repressor_idx = [i for i, x in enumerate(all_AHLs) if x == repressor]
+
+                    for idx_AHL in AHL_repressor_idx:
+                        from_node = idx_AHL + AHL_init_idx
+                        to_node = t_idx + toxin_init_idx
+
+                        adjacency_matrix[to_node, from_node] = -1
+
+                except(IndexError):
+                    pass
+
+
+                # Inducers
+                try:
+                    if t.AHL_repressors is np.nan:
+                        continue
+
+                    inducer = t.AHL_inducers[0]
+                    AHL_inducer_idx = [i for i, x in enumerate(all_AHLs) if x == inducer]
+                    for idx_AHL in AHL_inducer_idx:
+                        from_node = idx_AHL + AHL_init_idx
+                        to_node = t_idx + toxin_init_idx
+
+                        adjacency_matrix[to_node, from_node] = 1
+
+                except(IndexError):
+                    pass
+
+
+            # AHL immunity interactions from AHL to I
+            for i in all_immunity_objects:
+                i_idx = all_immunity_ids.index(i.id)
+
+                # Repressors
+                try:
+                    if i.AHL_repressors is np.nan:
+                        continue
+
+                    repressor = i.AHL_repressors[0]
+                    AHL_repressor_idx = [i for i, x in enumerate(all_AHLs) if x == repressor]
+
+                    for idx_AHL in AHL_repressor_idx:
+                        from_node = idx_AHL + AHL_init_idx
+                        to_node = i_idx + immunity_init_idx
+
+                        adjacency_matrix[to_node, from_node] = -1
+
+                except(IndexError):
+                    pass
+
+
+                # Inducers
+                try:
+                    if i.AHL_repressors is np.nan:
+                        continue
+
+                    inducer = i.AHL_inducers[0]
+                    AHL_inducer_idx = [i for i, x in enumerate(all_AHLs) if x == inducer]
+                    for idx_AHL in AHL_inducer_idx:
+                        from_node = idx_AHL + AHL_init_idx
+                        to_node = i_idx + immunity_init_idx
+
+                        adjacency_matrix[to_node, from_node] = 1
+
+                except(IndexError):
+                    pass
 
 
         self.adjacency_matrix = adjacency_matrix
@@ -286,6 +405,24 @@ class Model:
 
         return list(set(antitoxin_list))
 
+    def get_immunity_species(self):
+        immunity_list = []
+        for strain in self.strains:
+            strain_immunities = strain.immunity
+            for i in strain_immunities:
+                immunity_list.append(i.id)
+
+        return list(set(immunity_list))
+
+    def get_toxin_species(self):
+        toxin_list = []
+        for strain in self.strains:
+            strain_toxins = strain.toxins
+            for t in strain_toxins:
+                toxin_list.append(t.id)
+
+        return list(set(toxin_list))
+
     def is_legal(self):
         required_microcin = []
         required_AHL = []
@@ -311,6 +448,15 @@ class Model:
                 if v.AHL_repressors is not np.nan:
                     for a in v.AHL_repressors:
                         required_AHL.append(a)
+
+            for i in s.immunity:
+                if i.AHL_inducers is not np.nan:
+                    for a in i.AHL_inducers:
+                        required_AHL.append(a)
+                if i.AHL_repressors is not np.nan:
+                    for a in i.AHL_repressors:
+                        required_AHL.append(a)
+
 
             for m_sens in s.sensitivities:
                 required_microcin += [m_sens]
@@ -385,9 +531,21 @@ class Model:
             dA_dt = equation_builder.gen_AHL_diff_eq(a, self.strains)
             self.diff_eqs.update(dA_dt)
 
+        # For each antitoxin
         for v in self.antitoxin_ids:
             dV_dt = equation_builder.gen_diff_eq_antitoxin(v, self.strains)
             self.diff_eqs.update(dV_dt)
+
+        # For each immunity
+        for i in self.immunity_ids:
+            dI_dt = equation_builder.gen_diff_eq_immunity(i, self.strains)
+            self.diff_eqs.update(dI_dt)
+
+        # For each immunity
+        for t in self.toxin_ids:
+            dI_dt = equation_builder.gen_toxin_diff_eq(i, self.strains)
+            self.diff_eqs.update(dT_dt)
+
 
     def build_jacobian(self):
         species_names = list(self.diff_eqs.keys())
@@ -424,13 +582,11 @@ class Model:
                     all_params.append(str(symbol))
 
         all_params = sorted(list(set(all_params))) # Alphabetical order!
-
         self.params_list = all_params
 
     def config_data(self):
         # N, S, B, A
         for N in self.strains:
-            print(N.id)
             for S in N.substrate_dependences:
                 print(S.id)
 
@@ -440,7 +596,7 @@ class Model:
             for A in N.AHLs:
                 print(A.id)
 
-    def write_adj_matrix(self, output_dir, mic_ids, AHL_ids, strain_ids, substrate_ids, antitoxin_ids):
+    def write_adj_matrix(self, output_dir, mic_ids, AHL_ids, strain_ids, substrate_ids, antitoxin_ids, immunity_ids, toxin_ids):
         adj_mat_dir = output_dir + "adj_matricies/"
         utils.make_folder(adj_mat_dir)
 
@@ -466,13 +622,15 @@ class Model:
         for idx, i in enumerate(antitoxin_ids):
             new_antitoxin_ids.append("V_" + i)
 
-
+        new_immunity_ids = []
+        for idx, i in enumerate(immunity_ids):
+            new_antitoxin_ids.append("I_" + i)
 
         adj_matrix = self.adjacency_matrix
 
         with open(adj_mat_path, 'w') as f:
             w = csv.writer(f)
-            adj_mat_species = new_strain_ids + new_substrate_ids + new_mic_ids + new_AHL_ids + new_antitoxin_ids
+            adj_mat_species = new_strain_ids + new_substrate_ids + new_mic_ids + new_AHL_ids + new_antitoxin_ids + new_immunity_ids
             header = [None] + adj_mat_species
             w.writerow(header)
 
@@ -513,6 +671,7 @@ class Model:
                     continue
 
         if len(model_parameters) != len(prior_dict):
+
             params_missing = [i for i in model_parameters if i not in list(prior_dict.keys())]
             raise RuntimeError('Mismatch in length of prior dict and model parameters.', 'Prior: ', 
                 len(prior_dict), 'Params needed: ', len(model_parameters), params_missing)
@@ -550,6 +709,8 @@ class Model:
                 if param_species in model_species:
                     prior_dict[param_species] = [row['lower_bound'], row['upper_bound']]
                     continue
+
+        # exit()
 
         if len(model_species) != len(prior_dict):
             species_missing = [i for i in model_species if i not in list(model_species.keys())]

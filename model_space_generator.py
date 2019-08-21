@@ -52,15 +52,15 @@ def generate_microcin_combinations(microcin_ids, AHL_objects, microcin_induced=F
     return microcin_objects, microcin_config_df
 
 ##
-# Generates microcin objects for all combinations, given a list of AHL objects and information on
-# if microcin can be induced, repressed, or constitutively expressed. Currently assumes only one AHl can mediate
+# Generates antitoxin objects for all combinations, given a list of AHL objects and information on
+# if antitoxin can be induced, repressed, or constitutively expressed. Currently assumes only one AHl can mediate
 # expression at any one time.
 #
-# @param microcin_ids - List of possible ids for microcin, a proxy for the number of independent microcin
+# @param antitoxin - List of possible ids for antitoxin, a proxy for the number of independent antitoxin
 # @param AHL_objects - A list containing AHL objects
-# @param microcin_induced - Determines whether microcin can be induced by AHL
-# @param microcin_repressed - Determines whether microcin can be repressed by AHL
-# @param microcin_constitutive - Determines whether microcin can be constitutively expressed
+# @param antitoxin - Determines whether antitoxin can be induced by AHL
+# @param antitoxin_repressed - Determines whether antitoxin can be repressed by AHL
+# @param antitoxin_constitutive - Determines whether antitoxin can be constitutively expressed
 ##
 def generate_antitoxin_combinations(antitoxin_ids, AHL_objects, antitoxin_induced=False,
                                    antitoxin_repressed=False, antitoxin_constitutive=False):
@@ -96,19 +96,111 @@ def generate_antitoxin_combinations(antitoxin_ids, AHL_objects, antitoxin_induce
 
     return antitoxin_objects, antitoxin_config_df
 
+##
+# Generates immunity objects for all combinations, given a list of AHL objects and information on
+# if immunity can be induced, repressed, or constitutively expressed. Currently assumes only one AHl can mediate
+# expression at any one time.
+#
+# @param immunity_ids - List of possible ids for immunity, a proxy for the number of independent immunity
+# @param AHL_objects - A list containing AHL objects
+# @param immunity_induced - Determines whether immunity can be induced by AHL
+# @param immunity_repressed - Determines whether immunity can be repressed by AHL
+# @param immunity_constitutive - Determines whether immunity can be constitutively expressed
+##
+def generate_immunity_combinations(immunity_ids, AHL_objects, immunity_induced=False,
+                                   immunity_repressed=False, immunity_constitutive=False):
+    immunity_config_idx = 0
+    immunity_objects = []
+    immunity_config_data = []  # Microcin reference contains - config index, immunity_id, inducer_id, repressor_id, constitutive
+
+    if immunity_induced is True:
+        for AHL in AHL_objects:
+            for i_id in immunity_ids:
+                immunity_objects.append(species.Immunity(immunity_config_idx, i_id, [AHL], []))
+                config_data = [immunity_config_idx, i_id, AHL.id, np.nan]
+                immunity_config_data.append(config_data)
+                immunity_config_idx += 1
+
+    if immunity_repressed is True:
+        for AHL in AHL_objects:
+            for i_id in immunity_ids:
+                immunity_objects.append(species.Immunity(immunity_config_idx, i_id, [], [AHL]))
+
+                config_data = [immunity_config_idx, i_id, np.nan, AHL.id]
+                immunity_config_data.append(config_data)
+
+                immunity_config_idx += 1
+
+    if immunity_constitutive is True:
+        for i_id in immunity_ids:
+            immunity_objects.append(species.Immunity(immunity_config_idx, i_id, np.nan, np.nan, constitutive_expression=True))
+            immunity_config_idx += 1
+
+    immunity_config_df = pd.DataFrame(columns=["immunity_idx", "immunity_id", "inducer_id", "repressor_id"],
+                                      data=immunity_config_data)
+
+    return immunity_objects, immunity_config_df
+
+##
+# Generates toxin objects for all combinations, given a list of AHL objects and information on
+# if toxin can be induced, repressed, or constitutively expressed. Currently assumes only one AHl can mediate
+# expression at any one time.
+#
+# @param toxin_ids - List of possible ids for toxin, a proxy for the number of independent toxin
+# @param AHL_objects - A list containing AHL objects
+# @param toxin_induced - Determines whether toxin can be induced by AHL
+# @param toxin_repressed - Determines whether toxin can be repressed by AHL
+# @param toxin_constitutive - Determines whether toxin can be constitutively expressed
+##
+def generate_toxin_combinations(toxin_ids, AHL_objects, toxin_induced=False,
+                                   toxin_repressed=False, toxin_constitutive=False):
+    toxin_config_idx = 0
+    toxin_objects = []
+    toxin_config_data = []  # Microcin reference contains - config index, toxin_id, inducer_id, repressor_id, constitutive
+
+    if toxin_induced is True:
+        for AHL in AHL_objects:
+            for t_id in toxin_ids:
+                toxin_objects.append(species.Toxin(toxin_config_idx, t_id, [AHL], []))
+                config_data = [toxin_config_idx, t_id, AHL.id, np.nan]
+                toxin_config_data.append(config_data)
+                toxin_config_idx += 1
+
+    if toxin_repressed is True:
+        for AHL in AHL_objects:
+            for t_id in toxin_ids:
+                toxin_objects.append(species.Toxin(toxin_config_idx, t_id, [], [AHL]))
+
+                config_data = [toxin_config_idx, t_id, np.nan, AHL.id]
+                toxin_config_data.append(config_data)
+
+                toxin_config_idx += 1
+
+    if toxin_constitutive is True:
+        for t_id in toxin_ids:
+            toxin_objects.append(species.Toxin(toxin_config_idx, t_id, np.nan, np.nan, constitutive_expression=True))
+            toxin_config_idx += 1
+
+    toxin_config_df = pd.DataFrame(columns=["toxin_idx", "toxin_id", "inducer_id", "repressor_id"],
+                                      data=toxin_config_data)
+
+    return toxin_objects, toxin_config_df
+
 
 ##
 # Generates strain objects for all combinations, given a list of microcin objects and substrate objects
 ##
 class model_space():
-    def __init__(self, strain_ids, microcin_objects, AHL_objects, substrate_objects, antitoxin_objects,
-                 max_microcin_parts, max_AHL_parts, max_substrate_dependencies, max_antitoxins, max_microcin_sensitivities=1):
+    def __init__(self, strain_ids, microcin_objects, AHL_objects, substrate_objects, antitoxin_objects, immunity_objects, toxin_objects,
+                 max_microcin_parts, max_AHL_parts, max_substrate_dependencies, max_antitoxins, max_immunity, max_toxins, max_microcin_sensitivities=1):
         self.strain_ids = strain_ids
         self.strain_objects = []
         self.microcin_objects = microcin_objects
         self.AHL_objects = AHL_objects
         self.substrate_objects = substrate_objects
         self.antitoxin_objects = antitoxin_objects
+        self.immunity_objects = immunity_objects
+        self.toxin_objects = toxin_objects
 
         self.microcin_ids = list(set([m.id for m in microcin_objects]))
 
@@ -121,8 +213,13 @@ class model_space():
         self.max_substrate_parts = max_substrate_dependencies
         self.max_microcin_sensitivities = max_microcin_sensitivities
         self.max_antitoxins = max_antitoxins
+        self.max_immunity = max_immunity
+        self.max_toxins = max_toxins
 
-    def generate_part_combinations(self, strain_max_microcin, strain_max_AHL, strain_max_sub_dependencies, strain_max_microcin_sens, strain_max_sub_production, strain_max_antitoxin):
+    def generate_part_combinations(
+        self, strain_max_microcin, strain_max_AHL, strain_max_sub_dependencies, 
+        strain_max_microcin_sens, strain_max_sub_production, strain_max_antitoxin, 
+        strain_max_immunity, strain_max_toxin):
         # Construct possible combinations for each part. [None] added to AHL production, microcin production and
         # microcin sensitivity represent empty part. The purpose of this is so we generate combinations with one or more
         # of each part.
@@ -149,7 +246,13 @@ class model_space():
         antitoxin_list = [list(i for i in v if i != None) for v in
                                        itertools.combinations(self.antitoxin_objects  + [None], strain_max_antitoxin)]
 
-        # Append empty list representing no production or sensitivity, only necessarry if more than two max parts
+        immunity_list = [list(i for i in v if i != None) for v in
+                                       itertools.combinations(self.immunity_objects  + [None], strain_max_immunity)]
+
+        toxin_list = [list(i for i in v if i != None) for v in
+                                       itertools.combinations(self.toxin_objects  + [None], strain_max_toxin)]
+
+        # Append empty list representing no production or sensitivity, only necessary if more than two max parts
         if strain_max_AHL > 1:
             AHL_production_lists.append([])
 
@@ -168,6 +271,12 @@ class model_space():
         if strain_max_antitoxin > 1:
             antitoxin_list.append([])
 
+        if strain_max_immunity > 1:
+            immunity_list.append([])
+
+        if strain_max_toxin > 1:
+            toxin_list.append([])
+
         # Generate all different combinations of parts
         for m in microcin_production_lists:
             for a in AHL_production_lists:
@@ -175,7 +284,9 @@ class model_space():
                     for sensi in microcin_sensitivities_list:
                         for s_prod in substrate_production_list:
                             for v in antitoxin_list:
-                                self.part_combinations.append([m, a, s, sensi, s_prod, v])
+                                for i in immunity_list:
+                                    for t in toxin_list:
+                                        self.part_combinations.append([m, a, s, sensi, s_prod, v, i, t])
 
         return self.part_combinations
 
@@ -230,7 +341,6 @@ class model_space():
             if match is False:
                 keep_idx_1.append(idx)
         
-
         self.models_list = [self.models_list[i] for i in keep_idx_1]
 
     def generate_models(self):
@@ -251,7 +361,7 @@ class model_space():
             if new_model.is_legal():
                 self.models_list.append(new_model)
                 model_idx += 1
-                new_model.generate_adjacency_matrix(self.max_substrate_parts, self.max_AHL_parts, self.max_microcin_parts, len(self.strain_ids), self.max_antitoxins)
+                new_model.generate_adjacency_matrix(self.max_substrate_parts, self.max_AHL_parts, self.max_microcin_parts, len(self.strain_ids), self.max_antitoxins, self.max_immunity, self.max_toxins)
                 total_sys += 1
 
 
