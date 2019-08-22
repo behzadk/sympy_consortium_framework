@@ -16,7 +16,10 @@ funcs = {
     'A_production': 'kA_#A# * N_#N#',
 
     # Function defining sensitivity to microcin
-    'omega': '( omega_max_#B# * B_#B# )',
+    'omega_B': '( omega_max_#B# * B_#B# )',
+
+    # Function defining sensitivity to microcin
+    'omega_T': '( omega_max_#T# * T_#T# )',
 
     # Function defining production by antitoxin V
     'V_antitoxin': '( 1 / ( V_#V#) )',
@@ -42,7 +45,10 @@ funcs = {
     'k_t_ind_#T#': '( A_#A#^nT_#T# / ( kT_#T#^nT_#T#  + A_#A#^nT_#T#) )',
 
     # Repression of toxin expression by AHL
-    'k_t_repr_#T#': '( kT_#T#^nT_#T#  / ( kT_#T#^nT_#T#  + A_#A#^nT_#T# ) )'
+    'k_t_repr_#T#': '( kT_#T#^nT_#T#  / ( kT_#T#^nT_#T#  + A_#A#^nT_#T# ) )',
+
+    # Annihilation of toxin by antitoxin
+    'k_ann_T_#T#_V_#V#': '( k_TV_ann * T_#T# * V_#V# )'
 }
 
 # Base eqs contain the description of species before interactions with other species.
@@ -52,9 +58,9 @@ base_eqs = {
     'S_#S#': '( D * ( S0_#S# - S_#S# ) )',
     'B_#B#': '( - D * B_#B# )',
     'A_#A#': '( - D * A_#A# )',
-    'V_#V#': '( - D * V_#V# )',
+    'V_#V#': ' ',
     'I_#I#': '( - D * I_#I# )',
-    'T_#T#': '( - D * T_#T# )'
+    'T_#T#': ' '
 }
 
 def gen_strain_growth_diff(strain_id, strain_list):
@@ -63,14 +69,14 @@ def gen_strain_growth_diff(strain_id, strain_list):
     for strain in strain_list:
         if strain.id is strain_id:
 
-            # Substrate depenent growth and diluton
+            # Substrate dependent growth and dilution
             dN_dt = dN_dt + ' + N_#N# '
             for s in strain.substrate_dependences:
                 dN_dt = dN_dt + ' * ' + funcs['mu_#N#'].replace('#S#', s.id)
 
             # Strain sensitive to microcin
             for m in strain.sensitivities:
-                dN_dt = dN_dt + ' - ( ' + funcs['omega']
+                dN_dt = dN_dt + ' - ( ' + funcs['omega_B']
                 dN_dt = dN_dt.replace('#B#', m)
 
                 # Apply immunity function if cognate immunity is present.
@@ -81,8 +87,16 @@ def gen_strain_growth_diff(strain_id, strain_list):
                         break
 
                 dN_dt = dN_dt + ' ) '
-
                 dN_dt = dN_dt + ' * N_#N# '
+
+
+            for t in strain.toxins:
+                dN_dt = dN_dt + ' - ( ' + funcs['omega_T']
+                dN_dt = dN_dt.replace('#T#', t.id)
+
+                dN_dt = dN_dt + ' ) '
+                dN_dt = dN_dt + ' * N_#N# '
+
 
     dN_dt = dN_dt.replace('#N#', strain_id)
     N_key = 'N_#N#'.replace('#N#', strain_id)
@@ -96,8 +110,9 @@ def gen_diff_eq_antitoxin(antitoxin_id, strain_list):
 
         for v in strain.antitoxins:
             if v.id is antitoxin_id:
-                dV_dt = dV_dt + ' + ' + ' kV_max_#V# '
 
+                # Production term
+                dV_dt = dV_dt + ' + ' + ' kV_max_#V# '
                 if v.AHL_inducers is not np.nan:
                     # Induction terms
                     for a in v.AHL_inducers:
@@ -107,8 +122,22 @@ def gen_diff_eq_antitoxin(antitoxin_id, strain_list):
                     for a in v.AHL_repressors:
                         dV_dt = dV_dt + ' * ' + funcs['k_v_repr_#V#'].replace('#A#', a.id)
 
-                dV_dt = dV_dt + ' * N_#N# '
+                # Get growth rate of strain producing to create degradation term
+                dV_dt = dV_dt + ' - ( 1 '
+                for s in strain.substrate_dependences:
+                    dV_dt = dV_dt + ' * ( ' + funcs['mu_#N#'].replace('#S#', s.id) 
+                
+                dV_dt = dV_dt + ' / 2 ) )'
                 dV_dt = dV_dt.replace('#N#', strain.id)
+
+                # Add annihilation term for cognate toxin
+                for toxin in strain.toxins:
+                    if toxin.id.split('_')[-1] == v.id:
+                        dV_dt = dV_dt + ' - ' + funcs['k_ann_T_#T#_V_#V#']
+                        dV_dt = dV_dt.replace('#T#', toxin.id)
+                        dV_dt = dV_dt.replace('#V#', v.id)
+                        break
+
 
     dV_dt = dV_dt.replace('#V#', antitoxin_id)
     V_key = 'V_#V#'.replace('#V#', antitoxin_id)
@@ -214,9 +243,10 @@ def gen_toxin_diff_eq(toxin_id, strain_list):
     dT_dt = base_eqs['T_#T#']
 
     for strain in strain_list:
-
         for t in strain.toxins:
             if t.id is toxin_id:
+                
+                # Add production terms
                 dT_dt = dT_dt + ' + ' + ' kTmax_#T# '
 
                 if t.AHL_inducers is not np.nan:
@@ -227,6 +257,25 @@ def gen_toxin_diff_eq(toxin_id, strain_list):
                 if t.AHL_repressors is not np.nan:
                     for a in t.AHL_repressors:
                         dT_dt = dT_dt + ' * ' + funcs['k_t_repr_#T#'].replace('#A#', a.id)
+                
+
+                # Get growth rate of strain producing
+                dT_dt = dT_dt + ' - ( 1 '
+                for s in strain.substrate_dependences:
+                    dT_dt = dT_dt + ' * ( ' + funcs['mu_#N#'].replace('#S#', s.id) 
+                
+                dT_dt = dT_dt + ' / 2 ) )'
+                dT_dt = dT_dt.replace('#N#', strain.id)
+
+                # Add annihilation term for cognate toxin
+                for antitoxin in strain.antitoxins:
+                    if antitoxin.id.split('_')[-1] == t.id:
+                        dT_dt = dT_dt + ' - ' + funcs['k_ann_T_#T#_V_#V#']
+                        dT_dt = dT_dt.replace('#T#', t.id)
+                        dT_dt = dT_dt.replace('#V#', antitoxin.id)
+                        break
+
+
 
     dT_dt = dT_dt.replace('#T#', toxin_id)
     T_key = 'T_#T#'.replace('#T#', toxin_id)

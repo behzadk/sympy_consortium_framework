@@ -99,7 +99,7 @@ def spock_manu_no_symm():
     # Generate microcin expression objects from AHLs and microcins
     microcin_objects, microcin_configs_df = model_space_generator.generate_microcin_combinations(microcin_ids,
                                                                                                  AHL_objects,
-                                                                                                 microcin_induced=False,
+                                                                                                 microcin_induced=True,
                                                                                                  microcin_repressed=False, microcin_constitutive=False)
 
     antitoxin_objects, antitoxin_configs_df = model_space_generator.generate_antitoxin_combinations(antitoxin_ids,
@@ -125,7 +125,7 @@ def spock_manu_no_symm():
 
     part_combos = model_space.generate_part_combinations(
     	strain_max_microcin=1, strain_max_AHL=2, strain_max_sub_dependencies=1, 
-    	strain_max_microcin_sens=1, strain_max_sub_production=0, strain_max_antitoxin=0, 
+    	strain_max_microcin_sens=1, strain_max_sub_production=0, strain_max_antitoxin=1, 
     	strain_max_immunity=1, strain_max_toxin=1
     	)
 

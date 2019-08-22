@@ -178,7 +178,7 @@ class Model:
                 from_node = v_idx + antitoxin_init_idx
 
                 for toxin_idx, toxin in enumerate(all_toxin_ids):
-                    if v.split('_')[-1] == mic:
+                    if v.split('_')[-1] == toxin:
                         to_node = toxin_idx + toxin_init_idx
                         adjacency_matrix[to_node, from_node] = -1
                         
@@ -511,7 +511,7 @@ class Model:
         # Remove models where antitoxin has no cognate toxin
         for strain in self.strains:
             for v in strain.antitoxins:
-                if v.id.split('_')[-1] not in self.microcin_ids:
+                if v.id.split('_')[-1] not in self.toxin_ids:
                     return False
 
 
