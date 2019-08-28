@@ -240,7 +240,7 @@ def three_species_no_symm():
     model_space = model_space_generator.model_space(strain_ids, microcin_objects, AHL_objects, substrate_objects,
                                                     max_microcin_parts=max_microcin_parts, max_AHL_parts=max_AHL_parts,
                                                     max_substrate_dependencies=max_substrate_parts,
-                                                    max_microcin_sensitivities=max_microcin_parts)
+                                                    max_microcin_sensitivities=max_microcin_parts, max_antitoxins=0)
 
     print("generating_part_combinations")
     part_combos = model_space.generate_part_combinations(1, 2, 1, 2)
@@ -262,8 +262,8 @@ def three_species_no_symm():
 
 def main():
     # single_strain_test()
-    spock_manu_no_symm()
-    # three_species_no_symm()
+    # spock_manu_no_symm()
+    three_species_no_symm()
 
 if __name__ == "__main__":
     main()

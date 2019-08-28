@@ -423,7 +423,7 @@ class Model:
                 if str(symbol) not in self.species_list:
                     all_params.append(str(symbol))
 
-        all_params = sorted(list(set(all_params))) # Alphabetical order!
+        all_params = sorted(list(set(all_params)), key=str.lower) # Alphabetical order!
 
         self.params_list = all_params
 
