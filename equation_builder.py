@@ -6,46 +6,42 @@ funcs = {
     'mu_#N#': '( mu_max_#N# * S_#S# / ( K_mu_#S# + S_#S# ) )',
 
     # Induction of bacteriocin expression by AHL
-    'k_b_ind_#B#': '( A_#A#^nB_#B# / ( KB_#B#^nB_#B# + A_#A#^nB_#B# ) )',
+    'k_b_ind_#B#': '( A_#A#^n_A_B_#B# / ( K_A_B_#B#^n_A_B_#B# + A_#A#^n_A_B_#B# ) )',
 
     # Repression of bacteriocin expression by AHL
-    'k_b_repr_#B#': '( KB_#B#^nB_#B# / ( KB_#B#^nB_#B# + A_#A#^nB_#B# ) )',
+    'k_b_repr_#B#': '( K_A_B_#B#^n_A_B_#B# / ( K_A_B_#B#^n_A_B_#B# + A_#A#^n_A_B_#B# ) )',
     # 'k_b_repr_#B#': '( 1 / 1 + ( KB_#B# + A_#A# )^nB_#B# )',
 
     # Production of an AHL species
     'A_production': 'kA_#A# * N_#N#',
 
     # Function defining sensitivity to microcin
-    'omega_B': '( omega_max_#B# * B_#B# )',
+    'omega_B': '( k_omega_B_#B# * B_#B# )',
 
     # Function defining sensitivity to microcin
-    'omega_T': '( omega_max_#T# * T_#T# )',
-
-    # Function defining production by antitoxin V
-    'V_antitoxin': '( 1 / ( V_#V#) )',
-    # 'V_antitoxin': '( K_V_#V# / ( V_#V# + K_V_#V# ) )',
+    'omega_T': '( k_omega_T_#T# * T_#T# )',
 
     # Induction of antitoxin expression by AHL
-    'k_v_ind_#V#': '( A_#A#^nV_#V# / ( kV_#V#^nV_#V#  + A_#A#^nV_#V#) )',
+    'k_v_ind_#V#': '( A_#A#^n_A_V_#V# / ( K_A_V_#V#^n_A_V_#V#  + A_#A#^n_A_V_#V#) )',
 
     # Repression of antitoxin expression by AHL
-    'k_v_repr_#V#': '( kV_#V#^nV_#V#  / ( kV_#V#^nV_#V#  + A_#A#^nV_#V# ) )',
+    'k_v_repr_#V#': '( K_A_V_#V#^n_A_V_#V#  / ( K_A_V_#V#^n_A_V_#V#  + A_#A#^n_A_V_#V# ) )',
     # 'k_v_repr_#V#': '( 1  / 1 + ( A_#A# / kV_#V#)^nV_#V# )'
 
     # Impact of immunity protein
-    'I_immunity': ' ( KI_#I#^nI_#I# / ( KI_#I#^nI_#I# + I^nI_#I# ) ) ',
+    'I_immunity': ' ( k_I_#I#^nI_#I# / ( k_I_#I#^nI_#I# + I_#I#^nI_#I# ) ) ',
     
     # Induction of immunity expression by AHL
-    'k_i_ind_#I#': '( A_#A#^nI_#I# / ( kI_#I#^nI_#I#  + A_#A#^nI_#I#) )',
+    'k_i_ind_#I#': '( A_#A#^n_A_I_#I# / ( K_A_I_#I#^n_A_I_#I#  + A_#A#^n_A_I_#I#) )',
 
     # Repression of immunity expression by AHL
-    'k_i_repr_#I#': '( kI_#I#^nI_#I#  / ( kI_#I#^nI_#I#  + A_#A#^nI_#I# ) )',
+    'k_i_repr_#I#': '( K_A_I_#I#^n_A_I_#I#  / ( K_A_I_#I#^n_A_I_#I#  + A_#A#^n_A_I_#I# ) )',
 
     # Induction of toxin expression by AHL
-    'k_t_ind_#T#': '( A_#A#^nT_#T# / ( kT_#T#^nT_#T#  + A_#A#^nT_#T#) )',
+    'k_t_ind_#T#': '( A_#A#^n_A_T_#T# / ( K_A_T_#T#^n_A_T_#T#  + A_#A#^n_A_T_#T#) )',
 
     # Repression of toxin expression by AHL
-    'k_t_repr_#T#': '( kT_#T#^nT_#T#  / ( kT_#T#^nT_#T#  + A_#A#^nT_#T# ) )',
+    'k_t_repr_#T#': '( K_A_T_#T#^n_A_T_#T#  / ( K_A_T_#T#^n_A_T_#T#  + A_#A#^n_A_T_#T# ) )',
 
     # Annihilation of toxin by antitoxin
     'k_ann_T_#T#_V_#V#': '( k_TV_ann * T_#T# * V_#V# )'
@@ -59,7 +55,7 @@ base_eqs = {
     'B_#B#': '( - D * B_#B# )',
     'A_#A#': '( - D * A_#A# )',
     'V_#V#': ' ',
-    'I_#I#': '( - D * I_#I# )',
+    'I_#I#': ' ',
     'T_#T#': ' '
 }
 
@@ -97,7 +93,6 @@ def gen_strain_growth_diff(strain_id, strain_list):
                 dN_dt = dN_dt + ' ) '
                 dN_dt = dN_dt + ' * N_#N# '
 
-
     dN_dt = dN_dt.replace('#N#', strain_id)
     N_key = 'N_#N#'.replace('#N#', strain_id)
 
@@ -123,11 +118,11 @@ def gen_diff_eq_antitoxin(antitoxin_id, strain_list):
                         dV_dt = dV_dt + ' * ' + funcs['k_v_repr_#V#'].replace('#A#', a.id)
 
                 # Get growth rate of strain producing to create degradation term
-                dV_dt = dV_dt + ' - ( 1 '
+                dV_dt = dV_dt + ' - ( V_#V# '
                 for s in strain.substrate_dependences:
-                    dV_dt = dV_dt + ' * ( ' + funcs['mu_#N#'].replace('#S#', s.id) 
+                    dV_dt = dV_dt + ' * ( ' + funcs['mu_#N#'].replace('#S#', s.id) + ' ) '
                 
-                dV_dt = dV_dt + ' / 2 ) )'
+                dV_dt = dV_dt + ' / 2 ) '
                 dV_dt = dV_dt.replace('#N#', strain.id)
 
                 # Add annihilation term for cognate toxin
@@ -163,6 +158,15 @@ def gen_diff_eq_immunity(immunity_id, strain_list):
                 if i.AHL_repressors is not np.nan:
                     for a in i.AHL_repressors:
                         dI_dt = dI_dt + ' * ' + funcs['k_i_repr_#I#'].replace('#A#', a.id)
+
+                # Get growth rate of strain producing
+                dI_dt = dI_dt + ' - I_#I# '
+                for s in strain.substrate_dependences:
+                    dI_dt = dI_dt + ' * ( ' + funcs['mu_#N#'].replace('#S#', s.id) + ' ) '
+                
+                dI_dt = dI_dt + ' / 2 '
+                dI_dt = dI_dt.replace('#N#', strain.id)
+
 
     dI_dt = dI_dt.replace('#I#', immunity_id)
     I_key = 'I_#I#'.replace('#I#', immunity_id)
@@ -219,7 +223,7 @@ def gen_microcin_diff_eq(microcin_id, strain_list):
 
         for b in strain.microcins:
             if b.id is microcin_id:
-                dB_dt = dB_dt + ' + ' + ' kBmax_#B# '
+                dB_dt = dB_dt + ' + ' + ' kB_max_#B# '
 
                 if b.AHL_inducers is not np.nan:
                     # Induction terms
@@ -247,7 +251,7 @@ def gen_toxin_diff_eq(toxin_id, strain_list):
             if t.id is toxin_id:
                 
                 # Add production terms
-                dT_dt = dT_dt + ' + ' + ' kTmax_#T# '
+                dT_dt = dT_dt + ' + ' + ' kT_max_#T# '
 
                 if t.AHL_inducers is not np.nan:
                     # Induction terms
@@ -258,14 +262,14 @@ def gen_toxin_diff_eq(toxin_id, strain_list):
                     for a in t.AHL_repressors:
                         dT_dt = dT_dt + ' * ' + funcs['k_t_repr_#T#'].replace('#A#', a.id)
                 
-
                 # Get growth rate of strain producing
-                dT_dt = dT_dt + ' - ( 1 '
+                dT_dt = dT_dt + ' - ( T_#T# '
                 for s in strain.substrate_dependences:
                     dT_dt = dT_dt + ' * ( ' + funcs['mu_#N#'].replace('#S#', s.id) 
                 
                 dT_dt = dT_dt + ' / 2 ) )'
                 dT_dt = dT_dt.replace('#N#', strain.id)
+
 
                 # Add annihilation term for cognate toxin
                 for antitoxin in strain.antitoxins:
@@ -275,9 +279,9 @@ def gen_toxin_diff_eq(toxin_id, strain_list):
                         dT_dt = dT_dt.replace('#V#', antitoxin.id)
                         break
 
-
-
     dT_dt = dT_dt.replace('#T#', toxin_id)
     T_key = 'T_#T#'.replace('#T#', toxin_id)
 
+    # print(dT_dt)
+    # print(strain_list[0].substrate_dependences)
     return {T_key: dT_dt}

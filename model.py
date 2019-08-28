@@ -99,6 +99,13 @@ class Model:
                 if t.id not in all_toxin_ids:
                     all_toxin_ids.append(t.id)
 
+            for i in strain.immunity:
+                if i not in all_immunity_objects:
+                    all_immunity_objects.append(i)
+
+                if i.id not in all_immunity_ids:
+                    all_immunity_ids.append(i.id)
+
 
         # Fill strain sensitivities to microcin sensitivity is a negative interaction from
         # microcin to strain. (i strain row, j mic col )
@@ -122,6 +129,10 @@ class Model:
                     to_node = idx_strain + strain_init_idx
 
                     adjacency_matrix[to_node, from_node] = 1
+
+        # Fill strain toxin sensitivity
+        for idx_strain, strain in enumerate(self.strains):
+
 
 
             # Production
@@ -164,7 +175,7 @@ class Model:
                     to_node = i_idx + immunity_init_idx
                     adjacency_matrix[to_node, from_node] = 1
 
-            # Toxin production
+            # Toxin production and sensitivity
             for strain_toxin in strain.toxins:
                 t_produced_idx = [all_toxin_ids.index(x.id) for i, x in enumerate(all_toxin_objects) if x == strain_toxin]
 
@@ -172,6 +183,12 @@ class Model:
                     from_node = idx_strain + strain_init_idx
                     to_node = t_idx + toxin_init_idx
                     adjacency_matrix[to_node, from_node] = 1
+
+                for t_idx in t_produced_idx:
+                    from_node = t_idx + toxin_init_idx
+                    to_node = idx_strain + strain_init_idx
+                    adjacency_matrix[to_node, from_node] = -1
+
 
             # Antitoxin inhibition of toxin
             for v_idx, v in enumerate(all_antitoxin_ids):
@@ -473,7 +490,6 @@ class Model:
         for a in required_AHL:
             if a.id not in self.AHL_ids:
                 return False
-
         for m in required_microcin:
             if m not in self.microcin_ids:
                 return False
@@ -507,13 +523,19 @@ class Model:
         #             return False
 
 
-
         # Remove models where antitoxin has no cognate toxin
         for strain in self.strains:
             for v in strain.antitoxins:
-                if v.id.split('_')[-1] not in self.toxin_ids:
+                if v.id.split('_')[-1] not in [t.id for t in strain.toxins]:
                     return False
 
+        # Remove models where immunity has no cognate microcin
+        for strain in self.strains:
+            for i in strain.immunity:
+                if i.id.split('_')[-1] not in [i.id for i in strain.immunity]:
+                    return False
+
+        # Remove models 
 
         return True
 
@@ -590,7 +612,7 @@ class Model:
                 if str(symbol) not in self.species_list:
                     all_params.append(str(symbol))
 
-        all_params = sorted(list(set(all_params))) # Alphabetical order!
+        all_params = sorted(list(set(all_params)), key=str.lower) # Alphabetical order!
         self.params_list = all_params
 
     def config_data(self):
@@ -635,10 +657,9 @@ class Model:
         for idx, i in enumerate(immunity_ids):
             new_immunity_ids.append("I_" + i)
 
-
         new_toxin_ids = []
         for idx, i in enumerate(toxin_ids):
-            new_toxin_ids.append("I_" + i)
+            new_toxin_ids.append("T_" + i)
 
 
         adj_matrix = self.adjacency_matrix
@@ -676,7 +697,7 @@ class Model:
                 prior_dict[p] = [row['lower_bound'], row['upper_bound']]
                 continue
 
-            # Adds param to dict if it is linked to a particulr species, identified by the id tag
+            # Adds param to dict if it is linked to a particular species, identified by the id tag
             p = row['parameter'] + '_#ID#'
 
             for id in self.all_ids:

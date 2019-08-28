@@ -93,5 +93,7 @@ def known_two_strain_systems():
     header.write_header_file("./output/known_2_species/model.h")
 
 
+def one_strain_tests():
+
 if __name__== "__main__":
     known_two_strain_systems()
