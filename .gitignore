@@ -1,3 +1,5 @@
 output/
 py_eqs_and_posterior/
 py_eqs_txt_files/
+__pycache__
+__pycache__/
