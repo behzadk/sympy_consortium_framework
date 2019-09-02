@@ -448,6 +448,9 @@ class Model:
 
         # Legal requirements
         for s in self.strains:
+            if len(s.substrate_dependences) == 0:
+                return False
+
             required_sub += s.substrate_dependences
 
             # Load AHLs which have an activity on microcin or antitoxin expression
