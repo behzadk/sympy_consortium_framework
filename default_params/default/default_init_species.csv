@@ -1,5 +1,5 @@
 species,lower_bound,upper_bound
-N,0.1,1
+N,0.01,0.4
 S,0.22,0.22
 B,1E-80,1E-80
 A,1E-10,1E-10

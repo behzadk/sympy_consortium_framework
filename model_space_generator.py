@@ -5,6 +5,40 @@ import model
 import numpy as np
 import utils
 from tqdm import tqdm
+from cpp_output import Cpp_source_output
+from cpp_output import Cpp_header_output
+
+
+def generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, immunity_ids, toxin_ids, output_dir):
+    utils.make_folder(output_dir)
+
+    for idx, m in enumerate(model_list):
+        m.write_adj_matrix(output_dir, microcin_ids, AHL_ids, strain_ids, substrate_ids, antitoxin_ids, immunity_ids, toxin_ids)
+
+
+def generate_simulation_files(model_list, params_path, init_species_path, output_dir):
+    utils.make_folder(output_dir)
+    print("Number of legal models: ", len(model_list))
+    print("building equations and writing input files")
+
+    print("Building cpp files.. ")
+    for idx, m in enumerate(tqdm(model_list)):
+        m.build_equations()
+        m.build_symbolic_equations()
+        m.build_jacobian()
+        m.extract_species()
+        m.extract_params()
+        m.write_python_equations(output_dir)
+
+        m.write_prior_parameter_dict(params_path, output_dir)
+        m.write_init_species_dict(init_species_path, output_dir)
+
+    print("Writing source and header files")
+    cpp_out = Cpp_source_output(model_list)
+    cpp_out.write_source_file(output_dir)
+    header = Cpp_header_output(model_list)
+    header.write_header_file(output_dir)
+
 
 ##
 # Generates microcin objects for all combinations, given a list of AHL objects and information on
@@ -417,7 +451,6 @@ class model_space():
     def generate_model_reference_table(self, max_microcin_parts, max_AHL_parts,
                                        max_substrate_dependencies, max_microcin_sensitivities):
         # Make column headers
-
         cell_prefix = 'cell_IDX_'
         microcin_prefix = 'M_IDX'
         AHL_prefix = 'AHL_IDX'
