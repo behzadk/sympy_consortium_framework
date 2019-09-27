@@ -19,7 +19,8 @@ funcs = {
     'omega_B': '( k_omega_B_#B# * B_#B# )',
 
     # Function defining sensitivity to microcin
-    'omega_T': '( k_omega_T_#T# * T_#T# )',
+    # 'omega_T': '( k_omega_T_#T# * T_#T# )',
+    'omega_T': ' k_omega_T_#T#^2  / ( k_omega_T_#T#^2 + T_#T#^2 ) ',
 
     # Induction of antitoxin expression by AHL
     'k_v_ind_#V#': '( A_#A#^n_A_V_#V# / ( K_A_V_#V#^n_A_V_#V#  + A_#A#^n_A_V_#V#) )',
@@ -87,11 +88,11 @@ def gen_strain_growth_diff(strain_id, strain_list):
 
 
             for t in strain.toxins:
-                dN_dt = dN_dt + ' - ( ' + funcs['omega_T']
+                dN_dt = dN_dt + ' * ( ' + funcs['omega_T']
                 dN_dt = dN_dt.replace('#T#', t.id)
 
                 dN_dt = dN_dt + ' ) '
-                dN_dt = dN_dt + ' * N_#N# '
+                # dN_dt = dN_dt + ' * N_#N# '
 
     dN_dt = dN_dt.replace('#N#', strain_id)
     N_key = 'N_#N#'.replace('#N#', strain_id)
@@ -119,10 +120,38 @@ def gen_diff_eq_antitoxin(antitoxin_id, strain_list):
 
                 # Get growth rate of strain producing to create degradation term
                 dV_dt = dV_dt + ' - ( V_#V# '
+
+                grwth_dilution = ''
                 for s in strain.substrate_dependences:
-                    dV_dt = dV_dt + ' * ( ' + funcs['mu_#N#'].replace('#S#', s.id) + ' ) '
+                    grwth_dilution = grwth_dilution + ' * ( ' + funcs['mu_#N#'].replace('#S#', s.id) 
                 
-                dV_dt = dV_dt + ' / 2 ) '
+                # Strain sensitive to microcin
+                for m in strain.sensitivities:
+                    grwth_dilution = grwth_dilution + ' - ( ' + funcs['omega_B']
+                    grwth_dilution = grwth_dilution.replace('#B#', m)
+
+                    # Apply immunity function if cognate immunity is present.
+                    for imm in strain.immunity:
+                        if imm.id.split('_')[-1] == m:
+                            grwth_dilution = grwth_dilution + ' * ' + funcs['I_immunity']
+                            grwth_dilution = grwth_dilution.replace('#I#', imm.id)
+                            break
+
+                    grwth_dilution = grwth_dilution + ' ) '
+
+
+                for t in strain.toxins:
+                    grwth_dilution = grwth_dilution + ' * ( ' + funcs['omega_T']
+                    grwth_dilution = grwth_dilution.replace('#T#', t.id)
+
+                    grwth_dilution = grwth_dilution + ' ) '
+                    # dN_dt = dN_dt + ' * N_#N# '
+
+
+
+                dV_dt = dV_dt + grwth_dilution
+                
+                dV_dt = dV_dt + ' / 2 ) )'
                 dV_dt = dV_dt.replace('#N#', strain.id)
 
                 # Add annihilation term for cognate toxin
@@ -160,11 +189,38 @@ def gen_diff_eq_immunity(immunity_id, strain_list):
                         dI_dt = dI_dt + ' * ' + funcs['k_i_repr_#I#'].replace('#A#', a.id)
 
                 # Get growth rate of strain producing
-                dI_dt = dI_dt + ' - I_#I# '
+                dI_dt = dI_dt + ' - ( I_#I# '
+
+                grwth_dilution = ''
                 for s in strain.substrate_dependences:
-                    dI_dt = dI_dt + ' * ( ' + funcs['mu_#N#'].replace('#S#', s.id) + ' ) '
+                    grwth_dilution = grwth_dilution + ' * ( ' + funcs['mu_#N#'].replace('#S#', s.id) 
                 
-                dI_dt = dI_dt + ' / 2 '
+                # Strain sensitive to microcin
+                for m in strain.sensitivities:
+                    grwth_dilution = grwth_dilution + ' - ( ' + funcs['omega_B']
+                    grwth_dilution = grwth_dilution.replace('#B#', m)
+
+                    # Apply immunity function if cognate immunity is present.
+                    for imm in strain.immunity:
+                        if imm.id.split('_')[-1] == m:
+                            grwth_dilution = grwth_dilution + ' * ' + funcs['I_immunity']
+                            grwth_dilution = grwth_dilution.replace('#I#', imm.id)
+                            break
+
+                    grwth_dilution = grwth_dilution + ' ) '
+
+
+                for t in strain.toxins:
+                    grwth_dilution = grwth_dilution + ' * ( ' + funcs['omega_T']
+                    grwth_dilution = grwth_dilution.replace('#T#', t.id)
+
+                    grwth_dilution = grwth_dilution + ' ) '
+                    # dN_dt = dN_dt + ' * N_#N# '
+
+
+
+                dI_dt = dI_dt + grwth_dilution
+                dI_dt = dI_dt + ' / 2 ) ) '
                 dI_dt = dI_dt.replace('#N#', strain.id)
 
 
@@ -264,11 +320,36 @@ def gen_toxin_diff_eq(toxin_id, strain_list):
                 
                 # Get growth rate of strain producing
                 dT_dt = dT_dt + ' - ( T_#T# '
+
+                grwth_dilution = ''
                 for s in strain.substrate_dependences:
-                    dT_dt = dT_dt + ' * ( ' + funcs['mu_#N#'].replace('#S#', s.id) 
+                    grwth_dilution = grwth_dilution + ' * ( ' + funcs['mu_#N#'].replace('#S#', s.id) 
                 
-                dT_dt = dT_dt + ' / 2 ) )'
-                dT_dt = dT_dt.replace('#N#', strain.id)
+                # Strain sensitive to microcin
+                for m in strain.sensitivities:
+                    grwth_dilution = grwth_dilution + ' - ( ' + funcs['omega_B']
+                    grwth_dilution = grwth_dilution.replace('#B#', m)
+
+                    # Apply immunity function if cognate immunity is present.
+                    for imm in strain.immunity:
+                        if imm.id.split('_')[-1] == m:
+                            grwth_dilution = grwth_dilution + ' * ' + funcs['I_immunity']
+                            grwth_dilution = grwth_dilution.replace('#I#', imm.id)
+                            break
+
+                    grwth_dilution = grwth_dilution + ' ) '
+
+
+                for t in strain.toxins:
+                    grwth_dilution = grwth_dilution + ' * ( ' + funcs['omega_T']
+                    grwth_dilution = grwth_dilution.replace('#T#', t.id)
+
+                    grwth_dilution = grwth_dilution + ' ) '
+                    # dN_dt = dN_dt + ' * N_#N# '
+
+                    dT_dt = dT_dt + grwth_dilution
+                    dT_dt = dT_dt + ' / 2 ) )'
+                    dT_dt = dT_dt.replace('#N#', strain.id)
 
 
                 # Add annihilation term for cognate toxin

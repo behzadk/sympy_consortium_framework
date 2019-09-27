@@ -203,22 +203,22 @@ def single_strain_test():
     microcin_objects, microcin_configs_df = model_space_generator.generate_microcin_combinations(microcin_ids,
                                                                                                  AHL_objects,
                                                                                                  microcin_induced=False,
-                                                                                                 microcin_repressed=False, microcin_constitutive=False)
+                                                                                                 microcin_repressed=False, microcin_constitutive=True)
     toxin_objects, toxin_configs_df = model_space_generator.generate_toxin_combinations(toxin_ids,
                                                                                                  AHL_objects,
                                                                                                  toxin_induced=False,
-                                                                                                 toxin_repressed=False, toxin_constitutive=True)
+                                                                                                 toxin_repressed=False, toxin_constitutive=False)
 
 
     antitoxin_objects, antitoxin_configs_df = model_space_generator.generate_antitoxin_combinations(antitoxin_ids,
                                                                                                  AHL_objects,
                                                                                                  antitoxin_induced=False,
-                                                                                                 antitoxin_repressed=False, antitoxin_constitutive=True)
+                                                                                                 antitoxin_repressed=False, antitoxin_constitutive=False)
 
     immunity_objects, immunity_configs_df = model_space_generator.generate_immunity_combinations(immunity_ids,
                                                                                                  AHL_objects,
                                                                                                  immunity_induced=False,
-                                                                                                 immunity_repressed=False, immunity_constitutive=False)
+                                                                                                 immunity_repressed=False, immunity_constitutive=True)
 
 
     model_space = model_space_generator.model_space(strain_ids, microcin_objects,
