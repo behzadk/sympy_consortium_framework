@@ -5,6 +5,7 @@ import model
 import numpy as np
 import utils
 from tqdm import tqdm
+import predefined_model_spaces
 
 ##
 # Generates microcin objects for all combinations, given a list of AHL objects and information on
@@ -382,18 +383,23 @@ class model_space():
             
             keep = True
 
-            # Only one strain is producing stuff
-            if sum(model.adjacency_matrix[:, 0]) == 0 or sum(model.adjacency_matrix[:, 1]) == 0:
-                pass
-            else:
-                keep = False
-
             # neither strain produces glucose
             if sum(model.adjacency_matrix[2]) != 0:
                 keep = False
 
             # Both strains use glucose
             if sum(model.adjacency_matrix[:, 2]) != 2:
+                keep = False
+
+            if model.adjacency_matrix[3][0] == 1 and abs(sum(model.adjacency_matrix[:, 3])) != 2:
+                keep = False
+
+
+            # Only one strain is producing stuff
+            if sum(model.adjacency_matrix[:, 0]) == 0 or sum(model.adjacency_matrix[:, 1]) == 0:
+                pass
+            
+            else:
                 keep = False
 
             if keep:
