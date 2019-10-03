@@ -16,7 +16,7 @@ funcs = {
     'A_production': 'kA_#A# * N_#N#',
 
     # Function defining sensitivity to microcin
-    'omega_B': '( k_omega_B_#B# * B_#B# )',
+    'omega_B': ' omega_max * B_#B#^n_omega / ( k_omega_B_#B#^n_omega + B_#B#^n_omega ) ',
 
     # Function defining sensitivity to microcin
     # 'omega_T': '( k_omega_T_#T# * T_#T# )',
