@@ -535,7 +535,7 @@ class Model:
         # Remove models where immunity has no cognate microcin
         for strain in self.strains:
             for i in strain.immunity:
-                if i.id.split('_')[-1] not in [i.id for i in strain.immunity]:
+                if i.id.split('_')[-1] not in [i.id for i in strain.microcins]:
                     return False
 
         # Remove models 

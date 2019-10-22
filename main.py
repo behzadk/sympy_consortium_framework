@@ -148,8 +148,9 @@ def spock_manu_no_symm():
     model_space.remove_symmetries()
     model_space.reset_model_indexes()
 
-
     model_list = model_space.models_list
+    print(len(model_list))
+    exit()
 
     generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, immunity_ids, toxin_ids, output_dir)
 
@@ -157,7 +158,16 @@ def spock_manu_no_symm():
     print("Balagadde model: ", len(model_space.models_list))
     bala_model = predefined_model_spaces.balagadde(len(model_space.models_list), output_dir)
     model_space.models_list.append(bala_model)
+    model_space.reset_model_indexes()
 
+    print("Scott model: ", len(model_space.models_list))
+    scott_model = predefined_model_spaces.balagadde(len(model_space.models_list), output_dir)
+    model_space.models_list.append(scott_model)
+    model_space.reset_model_indexes()
+
+    print("Mccardell model: ", len(model_space.models_list))
+    mccardell_model = predefined_model_spaces.mccardell(len(model_space.models_list), output_dir)
+    model_space.models_list.append(mccardell_model)
     model_space.reset_model_indexes()
 
     model_list = model_space.models_list
@@ -297,8 +307,12 @@ def three_species_no_symm():
     generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, output_dir)
 
 
+
+
+
 def main():
     # single_strain_test()
+    two_species
     spock_manu_no_symm()
     # three_species_no_symm()
 

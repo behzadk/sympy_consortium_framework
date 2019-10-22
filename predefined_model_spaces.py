@@ -152,6 +152,115 @@ def balagadde(model_idx, adj_mat_out_dir):
 
     return bala_model
 
+def scott(model_idx, adj_mat_out_dir):
+
+    # Set species IDs
+    substrate_ids = ['glu']
+    S_glu = Substrate(substrate_ids[0])
+    # S_trp = Substrate(substrate_ids[1])
+
+    substrate_objects = [S_glu]
+
+    AHL_ids = ['1', '2']
+    AHL_1 = AHL(AHL_ids[0])
+    AHL_2 = AHL(AHL_ids[1])
+
+    AHL_objects = [AHL_1, AHL_2]
+
+    toxin_ids = ['1T', '2T']
+    strain_ids = ['1', '2']
+
+    A_1 = AHL(AHL_ids[0])
+    A_2 = AHL(AHL_ids[1])
+
+    T_1 = Toxin(config_idx=0, toxin_id=toxin_ids[0], AHL_inducer_list=[A_1], AHL_repressor_list=[], constitutive_expression=True)
+
+    # AHL from strain 1 induces toxin in strain 2
+    T_2 = Toxin(config_idx=1, toxin_id=toxin_ids[1], AHL_inducer_list=[A_2], AHL_repressor_list=[], constitutive_expression=False)
+
+
+    N_1 = Strain(strain_id=strain_ids[0],
+                 microcin_expression=[],
+                 AHL_expression=[A_1],
+                 substrate_dependences=[S_glu],
+                 microcin_sensitivities=[],
+                 substrate_production=[],
+                 antitoxins=[],
+                 immunity_expression=[],
+                 toxin_expression=[T_1])
+
+    N_2 = Strain(strain_id=strain_ids[1],
+                 microcin_expression=[],
+                 AHL_expression=[A_2],
+                 substrate_dependences=[S_glu],
+                 microcin_sensitivities=[],
+                 substrate_production=[],
+                 antitoxins=[],
+                 immunity_expression=[],
+                 toxin_expression=[T_2])
+
+    scott_model = Model(model_idx=model_idx, strain_list=[N_1, N_2])
+    scott_model.generate_adjacency_matrix(len(substrate_ids), len(AHL_ids), 0, len(strain_ids), 0, len(toxin_ids))
+    scott_model.write_adj_matrix(adj_mat_out_dir, [], AHL_ids, strain_ids, substrate_ids, [], [], toxin_ids)
+
+    return scott_model
+
+
+def mccardell(model_idx, adj_mat_out_dir):
+
+    # Set species IDs
+    substrate_ids = ['glu']
+    S_glu = Substrate(substrate_ids[0])
+    # S_trp = Substrate(substrate_ids[1])
+
+    substrate_objects = [S_glu]
+
+    AHL_ids = ['1', '2']
+    AHL_1 = AHL(AHL_ids[0])
+    AHL_2 = AHL(AHL_ids[1])
+
+    AHL_objects = [AHL_1, AHL_2]
+
+    toxin_ids = ['1T', '2T']
+    strain_ids = ['1', '2']
+
+    A_1 = AHL(AHL_ids[0])
+    A_2 = AHL(AHL_ids[1])
+
+    T_1 = Toxin(config_idx=0, toxin_id=toxin_ids[0], AHL_inducer_list=[A_1], AHL_repressor_list=[], constitutive_expression=True)
+
+    # AHL from strain 1 induces toxin in strain 2
+    T_2 = Toxin(config_idx=1, toxin_id=toxin_ids[1], AHL_inducer_list=[A_2], AHL_repressor_list=[A_1], constitutive_expression=False)
+
+
+    N_1 = Strain(strain_id=strain_ids[0],
+                 microcin_expression=[],
+                 AHL_expression=[A_1],
+                 substrate_dependences=[S_glu],
+                 microcin_sensitivities=[],
+                 substrate_production=[],
+                 antitoxins=[],
+                 immunity_expression=[],
+                 toxin_expression=[T_1])
+
+    N_2 = Strain(strain_id=strain_ids[1],
+                 microcin_expression=[],
+                 AHL_expression=[A_2],
+                 substrate_dependences=[S_glu],
+                 microcin_sensitivities=[],
+                 substrate_production=[],
+                 antitoxins=[],
+                 immunity_expression=[],
+                 toxin_expression=[T_2])
+
+
+    mccardell = Model(model_idx=model_idx, strain_list=[N_1, N_2])
+
+    mccardell.generate_adjacency_matrix(len(substrate_ids), len(AHL_ids), 0, len(strain_ids), 0, 0, len(toxin_ids))
+    mccardell.write_adj_matrix(adj_mat_out_dir, [], AHL_ids, strain_ids, substrate_ids, [], [], toxin_ids)
+
+    return mccardell
+
 
 if __name__ == "__main__":
     balagadde()
