@@ -334,8 +334,10 @@ def two_species_no_symm(default_params_path, default_init_species_path, output_d
     print("Generating model list")
     model_list = model_space.generate_models()
     print("generating reference table")
-
     model_space.remove_symmetries()
+    print(len(model_space.models_list))
+    exit()
+
     model_space.reset_model_indexes()
 
     model_list = model_space.models_list

@@ -382,7 +382,6 @@ class model_space():
 
         system_combinations = itertools.combinations(self.part_combinations, len(self.strain_ids))
         total_sys = 0
-
         for sys in tqdm(system_combinations):
             model_strains = []
             for idx, N_id in enumerate(self.strain_ids):
