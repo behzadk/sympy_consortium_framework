@@ -267,7 +267,6 @@ class model_space():
         # microcin sensitivity represent empty part. The purpose of this is so we generate combinations with one or more
         # of each part.
 
-        # Consider making this into a lambda function
         microcin_production_lists = [list(i for i in m if i != None) for m in
                                      itertools.combinations(self.microcin_objects + [None for n in range(strain_max_microcin-1)], strain_max_microcin)]
         
@@ -286,39 +285,55 @@ class model_space():
                                        itertools.combinations(self.substrate_objects  + [None for n in range(strain_max_sub_production-1)], strain_max_sub_production)]
         
 
-        for s_prod in microcin_sensitivities_list:
-            print(s_prod)
-            print(len(s_prod))
-            print("")
 
-        exit()
+        # # Consider making this into a lambda function
+        # microcin_production_lists = [list(i for i in m if i != None) for m in
+        #                              itertools.combinations(self.microcin_objects + [None], strain_max_microcin)]
+        
+
+
+        # AHL_production_lists = [list(i for i in a if i != None) for a in
+        #                         itertools.combinations(self.AHL_objects + [None], strain_max_AHL)]
+
+
+        # substrate_dependencies_list = [list(i for i in s if i != None) for s in
+        #                                itertools.combinations(self.substrate_objects + [None], strain_max_sub_dependencies)]
+
+        # microcin_sensitivities_list = [list(i for i in m_id if i != None) for m_id in
+        #                                itertools.combinations(self.microcin_ids + [None], strain_max_microcin_sens)]
+
+        # substrate_production_list = [list(i for i in s if i != None) for s in
+        #                                itertools.combinations(self.substrate_objects  + [None], strain_max_sub_production)]
+        
+
+        # exit()
 
         antitoxin_list = [list(i for i in v if i != None) for v in
-                                       itertools.combinations(self.antitoxin_objects  + [None], strain_max_antitoxin)]
+                                       itertools.combinations(self.antitoxin_objects  + [None for n in range(strain_max_antitoxin-1)], strain_max_antitoxin)]
 
         immunity_list = [list(i for i in v if i != None) for v in
-                                       itertools.combinations(self.immunity_objects  + [None], strain_max_immunity)]
+                                       itertools.combinations(self.immunity_objects  + [None for n in range(strain_max_immunity-1)], strain_max_immunity)]
 
         toxin_list = [list(i for i in v if i != None) for v in
-                                       itertools.combinations(self.toxin_objects  + [None], strain_max_toxin)]
+                                       itertools.combinations(self.toxin_objects  + [None for n in range(strain_max_toxin-1)], strain_max_toxin)]
 
         # Append empty list representing no production or sensitivity, only necessary if more than two max parts
-        if strain_max_AHL > 1:
+        if strain_max_AHL >= 1:
             AHL_production_lists.append([])
 
-        if strain_max_microcin > 1:
+        if strain_max_microcin >= 1:
             microcin_production_lists.append([])
 
-        if strain_max_microcin_sens > 1:
+        if strain_max_microcin_sens >= 1:
             microcin_sensitivities_list.append([])
 
-        if strain_max_sub_dependencies > 1:
+        if strain_max_sub_dependencies >= 1:
             substrate_dependencies_list.append([])
 
-        if strain_max_sub_production > 1:
+        if strain_max_sub_production >= 1:
             substrate_production_list.append([])
         
-        if strain_max_antitoxin > 1:
+        if strain_max_antitoxin >= 1:
             antitoxin_list.append([])
 
         if strain_max_immunity > 1:
@@ -326,6 +341,14 @@ class model_space():
 
         if strain_max_toxin > 1:
             toxin_list.append([])
+
+        for s_prod in AHL_production_lists:
+            print(s_prod)
+            print(len(s_prod))
+            print("")
+
+
+
 
         # Generate all different combinations of parts
         for m in microcin_production_lists:

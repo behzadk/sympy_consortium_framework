@@ -73,7 +73,8 @@ def three_species_no_symm():
 def main():
     # single_strain_test()
     # spock_manu_no_symm()
-    three_species_no_symm()
+    # three_species_no_symm()
+    two_species_no_symm()
     # two_species_no_symm_auxos()
 
 if __name__ == "__main__":
