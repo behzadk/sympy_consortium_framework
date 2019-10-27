@@ -8,6 +8,15 @@ from tqdm import tqdm
 from cpp_output import Cpp_source_output
 from cpp_output import Cpp_header_output
 
+def equal_ignore_order(a, b):
+    """ Use only when elements are neither hashable nor sortable! """
+    unmatched = list(b)
+    for element in a:
+        try:
+            unmatched.remove(element)
+        except ValueError:
+            return False
+    return not unmatched
 
 def generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, immunity_ids, toxin_ids, output_dir):
     utils.make_folder(output_dir)
@@ -260,22 +269,29 @@ class model_space():
 
         # Consider making this into a lambda function
         microcin_production_lists = [list(i for i in m if i != None) for m in
-                                     itertools.combinations(self.microcin_objects + [None], strain_max_microcin)]
+                                     itertools.combinations(self.microcin_objects + [None for n in range(strain_max_microcin-1)], strain_max_microcin)]
         
 
-
         AHL_production_lists = [list(i for i in a if i != None) for a in
-                                itertools.combinations(self.AHL_objects + [None], strain_max_AHL)]
+                                itertools.combinations(self.AHL_objects + [None for n in range(strain_max_AHL-1)], strain_max_AHL)]
 
 
         substrate_dependencies_list = [list(i for i in s if i != None) for s in
-                                       itertools.combinations(self.substrate_objects + [None], strain_max_sub_dependencies)]
+                                       itertools.combinations(self.substrate_objects + [None for n in range(strain_max_sub_dependencies-1)], strain_max_sub_dependencies)]
 
         microcin_sensitivities_list = [list(i for i in m_id if i != None) for m_id in
-                                       itertools.combinations(self.microcin_ids + [None], strain_max_microcin_sens)]
+                                       itertools.combinations(self.microcin_ids + [None for n in range(strain_max_microcin_sens-1)], strain_max_microcin_sens)]
 
         substrate_production_list = [list(i for i in s if i != None) for s in
-                                       itertools.combinations(self.substrate_objects  + [None], strain_max_sub_production)]
+                                       itertools.combinations(self.substrate_objects  + [None for n in range(strain_max_sub_production-1)], strain_max_sub_production)]
+        
+
+        for s_prod in microcin_sensitivities_list:
+            print(s_prod)
+            print(len(s_prod))
+            print("")
+
+        exit()
 
         antitoxin_list = [list(i for i in v if i != None) for v in
                                        itertools.combinations(self.antitoxin_objects  + [None], strain_max_antitoxin)]

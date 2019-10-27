@@ -1,5 +1,5 @@
 parameter,lower_bound,upper_bound
-C,1.00E+12,1.00E+12
+C,1000000000000,1000000000000
 D,0.01,0.5
 K_A_B,1E-09,1E-06
 K_mu,3.9E-05,3.9E-05
@@ -17,3 +17,7 @@ kV,0,0
 K_V,0,0
 kV_max,0,0
 nV,0,0
+S0_trp,0,0
+S0_val,0,0
+p_trp,1,1
+p_val,1,1
