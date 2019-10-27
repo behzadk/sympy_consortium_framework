@@ -404,6 +404,7 @@ class model_space():
 
             if keep:
                 keep_list.append(model)
+                
             # if sum(model.adjacency_matrix[:, 1]) == 0 and sum(model.adjacency_matrix[2]) == 0 and sum(model.adjacency_matrix[:, 2]) == 2 and model.adjacency_matrix[0][3] == 0:
             #     keep_list.append(model)
 

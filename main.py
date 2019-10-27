@@ -63,7 +63,7 @@ def generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_id
 
 
 def spock_manu_no_symm():
-    output_dir = "./output/input_files_two_species_spock_manu_1/"
+    output_dir = "./output/input_files_two_species_spock_manu_2/"
 
     default_params_path = './default_params/spock_manu/default_params_spock_manu.csv'
     default_init_species_path = './default_params/spock_manu/default_init_species_spock_manu.csv'
@@ -123,27 +123,19 @@ def spock_manu_no_symm():
                                                     AHL_objects, substrate_objects, antitoxin_objects, immunity_objects, toxin_objects,
                                                     max_microcin_parts, max_AHL_parts,
                                                     max_substrate_parts, max_antitoxins, max_immunity_parts, max_toxin_parts, max_microcin_sensitivities=2)
+    print(len(microcin_objects))
+    print(len(toxin_objects))
+    print(len(antitoxin_objects))
+    print(len(immunity_objects))
 
     part_combos = model_space.generate_part_combinations(
         strain_max_microcin=1, strain_max_AHL=1, strain_max_sub_dependencies=1, 
         strain_max_microcin_sens=1, strain_max_sub_production=0, strain_max_antitoxin=1, 
         strain_max_immunity=1, strain_max_toxin=1
         )
-
+    print(len(part_combos))
+    exit()
     model_space.generate_models()
-
-    # clean_models = []
-    # for m in model_space.models_list:
-    #     clean = True
-    #     for strain in m.strains:
-    #         if len(strain.sensitivities) == 0:
-    #             clean = False
-
-    #     if clean:
-    #         clean_models.append(m)
-
-    # model_space.models_list = clean_models
-
     model_space.spock_manu_model_filter()
     model_space.remove_symmetries()
     model_space.reset_model_indexes()
@@ -312,7 +304,6 @@ def three_species_no_symm():
 
 def main():
     # single_strain_test()
-    two_species
     spock_manu_no_symm()
     # three_species_no_symm()
 

@@ -483,7 +483,6 @@ class Model:
                     for a in t.AHL_repressors:
                         required_AHL.append(a)
 
-
             for m_sens in s.sensitivities:
                 required_microcin += [m_sens]
 
