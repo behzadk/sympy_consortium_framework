@@ -8,15 +8,6 @@ from tqdm import tqdm
 from cpp_output import Cpp_source_output
 from cpp_output import Cpp_header_output
 
-def equal_ignore_order(a, b):
-    """ Use only when elements are neither hashable nor sortable! """
-    unmatched = list(b)
-    for element in a:
-        try:
-            unmatched.remove(element)
-        except ValueError:
-            return False
-    return not unmatched
 
 def generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, immunity_ids, toxin_ids, output_dir):
     utils.make_folder(output_dir)
@@ -230,6 +221,29 @@ def generate_toxin_combinations(toxin_ids, AHL_objects, toxin_induced=False,
     return toxin_objects, toxin_config_df
 
 
+def remove_identical_part_lists(parts_list):
+    unique_part_combos = []
+
+    for candidate in parts_list:
+        unique = True
+        for existing_combo in unique_part_combos:
+            if len(existing_combo) != len(candidate):
+                continue
+
+            match = True
+            for p in candidate:
+                if p not in existing_combo:
+                    match = False
+
+            if match:
+                unique = False
+                break
+
+        if unique:
+            unique_part_combos.append(candidate)
+
+    return unique_part_combos
+
 ##
 # Generates strain objects for all combinations, given a list of microcin objects and substrate objects
 ##
@@ -269,11 +283,10 @@ class model_space():
 
         microcin_production_lists = [list(i for i in m if i != None) for m in
                                      itertools.combinations(self.microcin_objects + [None for n in range(strain_max_microcin-1)], strain_max_microcin)]
-        
+
 
         AHL_production_lists = [list(i for i in a if i != None) for a in
                                 itertools.combinations(self.AHL_objects + [None for n in range(strain_max_AHL-1)], strain_max_AHL)]
-
 
         substrate_dependencies_list = [list(i for i in s if i != None) for s in
                                        itertools.combinations(self.substrate_objects + [None for n in range(strain_max_sub_dependencies-1)], strain_max_sub_dependencies)]
@@ -283,30 +296,6 @@ class model_space():
 
         substrate_production_list = [list(i for i in s if i != None) for s in
                                        itertools.combinations(self.substrate_objects  + [None for n in range(strain_max_sub_production-1)], strain_max_sub_production)]
-        
-
-
-        # # Consider making this into a lambda function
-        # microcin_production_lists = [list(i for i in m if i != None) for m in
-        #                              itertools.combinations(self.microcin_objects + [None], strain_max_microcin)]
-        
-
-
-        # AHL_production_lists = [list(i for i in a if i != None) for a in
-        #                         itertools.combinations(self.AHL_objects + [None], strain_max_AHL)]
-
-
-        # substrate_dependencies_list = [list(i for i in s if i != None) for s in
-        #                                itertools.combinations(self.substrate_objects + [None], strain_max_sub_dependencies)]
-
-        # microcin_sensitivities_list = [list(i for i in m_id if i != None) for m_id in
-        #                                itertools.combinations(self.microcin_ids + [None], strain_max_microcin_sens)]
-
-        # substrate_production_list = [list(i for i in s if i != None) for s in
-        #                                itertools.combinations(self.substrate_objects  + [None], strain_max_sub_production)]
-        
-
-        # exit()
 
         antitoxin_list = [list(i for i in v if i != None) for v in
                                        itertools.combinations(self.antitoxin_objects  + [None for n in range(strain_max_antitoxin-1)], strain_max_antitoxin)]
@@ -316,6 +305,16 @@ class model_space():
 
         toxin_list = [list(i for i in v if i != None) for v in
                                        itertools.combinations(self.toxin_objects  + [None for n in range(strain_max_toxin-1)], strain_max_toxin)]
+
+        microcin_production_lists = remove_identical_part_lists(microcin_production_lists)
+        AHL_production_lists = remove_identical_part_lists(AHL_production_lists)
+        substrate_dependencies_list = remove_identical_part_lists(substrate_dependencies_list)
+        substrate_production_list = remove_identical_part_lists(substrate_production_list)
+        microcin_sensitivities_list = remove_identical_part_lists(microcin_sensitivities_list)
+        antitoxin_list = remove_identical_part_lists(antitoxin_list)
+        immunity_list = remove_identical_part_lists(immunity_list)
+        toxin_list = remove_identical_part_lists(toxin_list)
+
 
         # Append empty list representing no production or sensitivity, only necessary if more than two max parts
         if strain_max_AHL >= 1:
@@ -336,19 +335,18 @@ class model_space():
         if strain_max_antitoxin >= 1:
             antitoxin_list.append([])
 
-        if strain_max_immunity > 1:
+        if strain_max_immunity >= 1:
             immunity_list.append([])
 
-        if strain_max_toxin > 1:
+        if strain_max_toxin >= 1:
             toxin_list.append([])
 
-        for s_prod in AHL_production_lists:
-            print(s_prod)
-            print(len(s_prod))
-            print("")
+        # for sub in microcin_production_lists:
+        #     for s in sub:
+        #         print(s.id)
+        #     print("")
 
-
-
+        # exit()
 
         # Generate all different combinations of parts
         for m in microcin_production_lists:
@@ -384,7 +382,7 @@ class model_space():
                 clean_stage_1_adj_mats.append(model.adjacency_matrix)
 
         strain_init_idx = 0
-        microcin_init_idx = strain_init_idx + len(self.strain_ids)
+        microcin_init_idx = strain_init_idx + len(self.strain_ids) + len(self.substrate_objects)
         AHL_init_idx = microcin_init_idx + self.max_microcin_parts
 
         strains_index_range = range(strain_init_idx, len(self.strain_ids))
@@ -411,6 +409,7 @@ class model_space():
                 if any(np.array_equal(x, new_adj) for x in clean_stage_1_adj_mats):
                     match = True
                     break
+                    
             if match is False:
                 keep_idx_1.append(idx)
         
@@ -483,6 +482,35 @@ class model_space():
                 keep_list.append(model)
 
         self.models_list = keep_list
+
+    def aux_filter(self):
+        keep_list = []
+
+        for model in tqdm(self.models_list):
+            substrate_production = []
+            substrate_dependencies = []
+
+            for strain in model.strains:
+                for s in strain.substrate_dependences:
+                    if s.id != 'glu':
+                        substrate_dependencies.append(s)
+                for s in strain.substrate_production:
+                    if s.id != 'glu':
+                        substrate_production.append(s)
+
+            keep = True
+            for s in substrate_dependencies:
+                if s not in substrate_production:
+                    keep = False
+
+            if keep:
+                keep_list.append(model)
+
+        self.models_list = keep_list
+
+
+
+
 
 
 

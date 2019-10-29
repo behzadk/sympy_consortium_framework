@@ -62,6 +62,13 @@ def two_species_no_symm_auxos():
 
     model_space = predefined_model_spaces.two_species_no_symm_auxos(default_params_path, default_init_species_path, output_dir)
 
+def three_species_no_symm_auxos():
+    output_dir = "./output/input_files_three_species_auxos_0/"
+    default_params_path = './default_params/default/default_params.csv'
+    default_init_species_path = './default_params/default/default_init_species.csv'
+
+    model_space = predefined_model_spaces.three_species_no_symm_auxos(default_params_path, default_init_species_path, output_dir)
+
 
 def three_species_no_symm():
     output_dir = "./output/input_files_three_species_0/"
@@ -74,8 +81,9 @@ def main():
     # single_strain_test()
     # spock_manu_no_symm()
     # three_species_no_symm()
-    two_species_no_symm()
-    # two_species_no_symm_auxos()
+    # two_species_no_symm()
+    two_species_no_symm_auxos()
+    # three_species_no_symm_auxos()
 
 if __name__ == "__main__":
     main()

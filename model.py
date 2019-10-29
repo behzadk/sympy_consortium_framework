@@ -520,6 +520,12 @@ class Model:
                 if sub not in required_sub:
                     return False
 
+        # Remove models where a produced substrate is also a dependency
+        for strain in self.strains:
+            for sub in strain.substrate_production:
+                if sub in strain.substrate_dependences:
+                    return False
+
         # Remove models where a substrate dependency does not exist
         # for strain in self.strains:
         #     for sub in strain.substrate_dependences:
