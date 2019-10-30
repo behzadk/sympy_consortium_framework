@@ -134,7 +134,6 @@ def spock_manu_no_symm():
         strain_max_immunity=1, strain_max_toxin=1
         )
     print(len(part_combos))
-    exit()
     model_space.generate_models()
     model_space.spock_manu_model_filter()
     model_space.remove_symmetries()
@@ -142,7 +141,6 @@ def spock_manu_no_symm():
 
     model_list = model_space.models_list
     print(len(model_list))
-    exit()
 
     generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, immunity_ids, toxin_ids, output_dir)
 
@@ -235,10 +233,8 @@ def single_strain_test():
         )
 
     model_space.generate_models()
-
     model_space.remove_symmetries()
     model_space.reset_model_indexes()
-
 
     model_list = model_space.models_list
 
@@ -297,9 +293,6 @@ def three_species_no_symm():
     print("generating generate_adjacency_matricies")
 
     generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, output_dir)
-
-
-
 
 
 def main():

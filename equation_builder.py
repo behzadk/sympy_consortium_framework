@@ -72,6 +72,12 @@ def gen_strain_growth_diff(strain_id, strain_list):
             for s in strain.substrate_dependences:
                 dN_dt = dN_dt + ' * ' + funcs['mu_#N#'].replace('#S#', s.id)
 
+            for t in strain.toxins:
+                dN_dt = dN_dt + ' * ( ' + funcs['omega_T']
+                dN_dt = dN_dt.replace('#T#', t.id)
+
+                dN_dt = dN_dt + ' ) '
+
             # Strain sensitive to microcin
             for m in strain.sensitivities:
                 dN_dt = dN_dt + ' - ( ' + funcs['omega_B']
@@ -88,12 +94,6 @@ def gen_strain_growth_diff(strain_id, strain_list):
                 dN_dt = dN_dt + ' * N_#N# '
 
 
-            for t in strain.toxins:
-                dN_dt = dN_dt + ' * ( ' + funcs['omega_T']
-                dN_dt = dN_dt.replace('#T#', t.id)
-
-                dN_dt = dN_dt + ' ) '
-                # dN_dt = dN_dt + ' * N_#N# '
 
     dN_dt = dN_dt.replace('#N#', strain_id)
     N_key = 'N_#N#'.replace('#N#', strain_id)
