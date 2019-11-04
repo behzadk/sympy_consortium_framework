@@ -391,9 +391,19 @@ class model_space():
             if sum(model.adjacency_matrix[:, 2]) != 2:
                 keep = False
 
-            if model.adjacency_matrix[3][0] == 1 and abs(sum(model.adjacency_matrix[:, 3])) != 2:
+            # # Both strains are sensitive to microcin
+            # if model.adjacency_matrix[3][0] == 1 and abs(sum(model.adjacency_matrix[:, 3])) != 2:
+            #     keep = False
+
+
+            # Strain two must be sensitive to microcin
+            if model.adjacency_matrix[3][0] == 1 and model.adjacency_matrix[1][3] != -1:
                 keep = False
 
+
+            # Remove strain that is insensitive to microcin and 
+            if model.adjacency_matrix[0][3] == 0 and model.adjacency_matrix[6][0] == 1:
+                keep = False
 
             # Only one strain is producing stuff
             if sum(model.adjacency_matrix[:, 0]) == 0 or sum(model.adjacency_matrix[:, 1]) == 0:

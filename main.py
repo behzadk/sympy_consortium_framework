@@ -111,12 +111,12 @@ def spock_manu_no_symm():
     antitoxin_objects, antitoxin_configs_df = model_space_generator.generate_antitoxin_combinations(antitoxin_ids,
                                                                                                  AHL_objects,
                                                                                                  antitoxin_induced=True,
-                                                                                                 antitoxin_repressed=True, antitoxin_constitutive=True)
+                                                                                                 antitoxin_repressed=True, antitoxin_constitutive=False)
 
     immunity_objects, immunity_configs_df = model_space_generator.generate_immunity_combinations(immunity_ids,
                                                                                                  AHL_objects,
                                                                                                  immunity_induced=True,
-                                                                                                 immunity_repressed=True, immunity_constitutive=True)
+                                                                                                 immunity_repressed=True, immunity_constitutive=False)
 
 
     model_space = model_space_generator.model_space(strain_ids, microcin_objects,
@@ -133,9 +133,12 @@ def spock_manu_no_symm():
         strain_max_microcin_sens=1, strain_max_sub_production=0, strain_max_antitoxin=1, 
         strain_max_immunity=1, strain_max_toxin=1
         )
+
     print(len(part_combos))
     model_space.generate_models()
     model_space.spock_manu_model_filter()
+    print("After spock filter: ", len(model_space.models_list))
+
     model_space.remove_symmetries()
     model_space.reset_model_indexes()
 
@@ -143,7 +146,6 @@ def spock_manu_no_symm():
     print(len(model_list))
 
     generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, immunity_ids, toxin_ids, output_dir)
-
     # Add additional models
     print("Balagadde model: ", len(model_space.models_list))
     bala_model = predefined_model_spaces.balagadde(len(model_space.models_list), output_dir)
@@ -161,7 +163,7 @@ def spock_manu_no_symm():
     model_space.reset_model_indexes()
 
     model_list = model_space.models_list
-
+    
     generate_simulation_files(model_list, default_params_path, default_init_species_path, output_dir)
 
 def single_strain_test():

@@ -21,7 +21,8 @@ funcs = {
 
     # Function defining sensitivity to microcin
     # 'omega_T': '( k_omega_T_#T# * T_#T# )',
-    'omega_T': ' k_omega_T_#T#^n_omega_T  / ( k_omega_T_#T#^n_omega_T + T_#T#^n_omega_T ) ',
+    # 'omega_T': ' k_omega_T_#T#^n_omega_T  / ( k_omega_T_#T#^n_omega_T + T_#T#^n_omega_T ) ',
+    'omega_T': ' omega_T_max * T_#T#^n_omega_T  / ( k_omega_T_#T#^n_omega_T + T_#T#^n_omega_T ) ',
 
     # Induction of antitoxin expression by AHL
     'k_v_ind_#V#': '( A_#A#^n_A_V_#V# / ( K_A_V_#V#^n_A_V_#V#  + A_#A#^n_A_V_#V#) )',
@@ -73,7 +74,7 @@ def gen_strain_growth_diff(strain_id, strain_list):
                 dN_dt = dN_dt + ' * ' + funcs['mu_#N#'].replace('#S#', s.id)
 
             for t in strain.toxins:
-                dN_dt = dN_dt + ' * ( ' + funcs['omega_T']
+                dN_dt = dN_dt + ' - ( ' + funcs['omega_T']
                 dN_dt = dN_dt.replace('#T#', t.id)
 
                 dN_dt = dN_dt + ' ) '
@@ -126,7 +127,7 @@ def gen_diff_eq_antitoxin(antitoxin_id, strain_list):
                 for s in strain.substrate_dependences:
                     grwth_dilution = grwth_dilution + ' * ( ' + funcs['mu_#N#'].replace('#S#', s.id) 
                 
-                if 1:
+                if 0:
                     # Strain sensitive to microcin
                     for m in strain.sensitivities:
                         grwth_dilution = grwth_dilution + ' - ( ' + funcs['omega_B']
@@ -197,27 +198,27 @@ def gen_diff_eq_immunity(immunity_id, strain_list):
                 for s in strain.substrate_dependences:
                     grwth_dilution = grwth_dilution + ' * ( ' + funcs['mu_#N#'].replace('#S#', s.id) 
                 
-                # Strain sensitive to microcin
-                for m in strain.sensitivities:
-                    grwth_dilution = grwth_dilution + ' - ( ' + funcs['omega_B']
-                    grwth_dilution = grwth_dilution.replace('#B#', m)
+                # # Strain sensitive to microcin
+                # for m in strain.sensitivities:
+                #     grwth_dilution = grwth_dilution + ' - ( ' + funcs['omega_B']
+                #     grwth_dilution = grwth_dilution.replace('#B#', m)
 
-                    # Apply immunity function if cognate immunity is present.
-                    for imm in strain.immunity:
-                        if imm.id.split('_')[-1] == m:
-                            grwth_dilution = grwth_dilution + ' * ' + funcs['I_immunity']
-                            grwth_dilution = grwth_dilution.replace('#I#', imm.id)
-                            break
+                #     # Apply immunity function if cognate immunity is present.
+                #     for imm in strain.immunity:
+                #         if imm.id.split('_')[-1] == m:
+                #             grwth_dilution = grwth_dilution + ' * ' + funcs['I_immunity']
+                #             grwth_dilution = grwth_dilution.replace('#I#', imm.id)
+                #             break
 
-                    grwth_dilution = grwth_dilution + ' ) '
+                #     grwth_dilution = grwth_dilution + ' ) '
 
 
-                for t in strain.toxins:
-                    grwth_dilution = grwth_dilution + ' * ( ' + funcs['omega_T']
-                    grwth_dilution = grwth_dilution.replace('#T#', t.id)
+                # for t in strain.toxins:
+                #     grwth_dilution = grwth_dilution + ' * ( ' + funcs['omega_T']
+                #     grwth_dilution = grwth_dilution.replace('#T#', t.id)
 
-                    grwth_dilution = grwth_dilution + ' ) '
-                    # dN_dt = dN_dt + ' * N_#N# '
+                #     grwth_dilution = grwth_dilution + ' ) '
+                #     # dN_dt = dN_dt + ' * N_#N# '
 
 
 
@@ -327,7 +328,7 @@ def gen_toxin_diff_eq(toxin_id, strain_list):
                 for s in strain.substrate_dependences:
                     grwth_dilution = grwth_dilution + ' * ( ' + funcs['mu_#N#'].replace('#S#', s.id)
                 
-                if 1:
+                if 0:
                     # Strain sensitive to microcin
                     for m in strain.sensitivities:
                         grwth_dilution = grwth_dilution + ' - ( ' + funcs['omega_B']
