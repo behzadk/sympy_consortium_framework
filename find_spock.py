@@ -3,7 +3,7 @@ import numpy as np
 import glob
 
 def main():
-	adj_mat_dir = "./output/input_files_two_species_spock_manu_1/adj_matricies/"
+	adj_mat_dir = "./output/input_files_two_species_spock_manu_2/adj_matricies/"
 	adj_mat_files = glob.glob(adj_mat_dir + '*.csv')
 
 	for f in adj_mat_files:
@@ -27,8 +27,9 @@ def main():
 
 		# mat[To][from]
 		is_spock = True
+		
 		# Has immunity
-		if not mat[I_1_idx][N_1_idx] == 1:
+		if not mat[I_1_idx][N_1_idx] == 0:
 			is_spock = False
 
 		# Constitutive expression
@@ -40,7 +41,7 @@ def main():
 			is_spock = False
 
 		# Kills N1
-		if not mat[N_1_idx][B_1_idx] == -1:
+		if not mat[N_1_idx][B_1_idx] == 0:
 			is_spock = False
 
 		# Kills N2
@@ -55,10 +56,11 @@ def main():
 		if not mat[B_1_idx][A_1_idx] == -1:
 			is_spock = False
 
-		if sum(mat[:, N_1_idx]) >  3:
+		if sum(mat[:, N_1_idx]) >  2:
 			is_spock = False
 
 		if is_spock:
+			
 			print(header)
 			print(mat)
 			print(f)
