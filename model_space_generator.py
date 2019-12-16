@@ -519,11 +519,9 @@ class model_space():
                 microcins = microcins + [m.id for m in strain.microcins]
 
             microcins = list(set(microcins))
-            print(microcins)
 
             for strain in model.strains:
                 n_immunity = len(microcins) - len(strain.sensitivities)
-                print(n_immunity)
 
                 if n_immunity > max_immunity:
                     keep_model = False
@@ -534,7 +532,13 @@ class model_space():
         self.models_list = keep_list
 
 
+    def one_predator_two_prey_filter(self):
+        for model in tqdm(self.models_list):
+            n_microcin_producers = 0
 
+            # Only one strain produces microcins
+            for strain in model.strains:
+                if len(strain.microci)
 
     def generate_model_reference_table(self, max_microcin_parts, max_AHL_parts,
                                        max_substrate_dependencies, max_microcin_sensitivities):
