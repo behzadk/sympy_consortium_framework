@@ -49,7 +49,7 @@ def single_strain_test():
     model_space = predefined_model_spaces.three_species_no_symm(default_params_path, default_init_species_path, output_dir)
 
 def two_species_no_symm():
-    output_dir = "./output/input_files_two_species_0/"
+    output_dir = "./output/input_files_two_species_1/"
     default_params_path = './default_params/default/default_params.csv'
     default_init_species_path = './default_params/default/default_init_species.csv'
 
@@ -80,8 +80,8 @@ def three_species_no_symm():
 def main():
     # single_strain_test()
     # spock_manu_no_symm()
-    # three_species_no_symm()
-    two_species_no_symm()
+    three_species_no_symm()
+    # two_species_no_symm()
     # two_species_no_symm_auxos()
     # three_species_no_symm_auxos()
 

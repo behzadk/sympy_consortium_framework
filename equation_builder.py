@@ -6,42 +6,42 @@ funcs = {
     'mu_#N#': '( mu_max_#N# * S_#S# / ( K_mu_#S# + S_#S# ) )',
 
     # Induction of bacteriocin expression by AHL
-    'k_b_ind_#B#': '( A_#A#^n_A_B_#B# / ( K_A_B_#B#^n_A_B_#B# + A_#A#^n_A_B_#B# ) )',
+    'k_b_ind_#B#': '( (C_extra * A_#A#)^n_A_B_#B# / ( K_A_B_#B#^n_A_B_#B# + (C_extra * A_#A#)^n_A_B_#B# ) )',
 
     # Repression of bacteriocin expression by AHL
-    'k_b_repr_#B#': '( K_A_B_#B#^n_A_B_#B# / ( K_A_B_#B#^n_A_B_#B# + A_#A#^n_A_B_#B# ) )',
+    'k_b_repr_#B#': '( K_A_B_#B#^n_A_B_#B# / ( K_A_B_#B#^n_A_B_#B# + (C_extra * A_#A#)^n_A_B_#B# ) )',
     # 'k_b_repr_#B#': '( 1 / 1 + ( KB_#B# + A_#A# )^nB_#B# )',
 
     # Production of an AHL species
-    'A_production': 'kA_#A# * N_#N# * C',
+    'A_production': 'kA_#A# * N_#N# * C_OD / C_extra',
 
     # Function defining sensitivity to microcin
-    'omega_B': ' omega_max * B_#B#^n_omega / ( k_omega_B_#B#^n_omega + B_#B#^n_omega ) ',
+    'omega_B': ' omega_max * (C_extra * B_#B#)^n_omega / ( k_omega_B_#B#^n_omega + (C_extra * B_#B#)^n_omega ) ',
 
     # Function defining sensitivity to microcin
     'omega_T': '( k_omega_T_#T# * T_#T# )',
 
     # Induction of antitoxin expression by AHL
-    'k_v_ind_#V#': '( A_#A#^n_A_V_#V# / ( K_A_V_#V#^n_A_V_#V#  + A_#A#^n_A_V_#V#) )',
+    'k_v_ind_#V#': '( (C_extra * A_#A#)^n_A_V_#V# / ( K_A_V_#V#^n_A_V_#V#  + (C_extra * A_#A#)^n_A_V_#V#) )',
 
     # Repression of antitoxin expression by AHL
-    'k_v_repr_#V#': '( K_A_V_#V#^n_A_V_#V#  / ( K_A_V_#V#^n_A_V_#V#  + A_#A#^n_A_V_#V# ) )',
+    'k_v_repr_#V#': '( K_A_V_#V#^n_A_V_#V#  / ( K_A_V_#V#^n_A_V_#V#  + (C_extra * A_#A#)^n_A_V_#V# ) )',
     # 'k_v_repr_#V#': '( 1  / 1 + ( A_#A# / kV_#V#)^nV_#V# )'
 
     # Impact of immunity protein
-    'I_immunity': ' ( k_I_#I#^nI_#I# / ( k_I_#I#^nI_#I# + I_#I#^nI_#I# ) ) ',
+    'I_immunity': ' ( k_I_#I#^nI_#I# / ( k_I_#I#^nI_#I# + C_intra * I_#I#^nI_#I# ) ) ',
     
     # Induction of immunity expression by AHL
-    'k_i_ind_#I#': '( A_#A#^n_A_I_#I# / ( K_A_I_#I#^n_A_I_#I#  + A_#A#^n_A_I_#I#) )',
+    'k_i_ind_#I#': '( (C_extra * A_#A#)^n_A_I_#I# / ( K_A_I_#I#^n_A_I_#I#  + (C_extra * A_#A#)^n_A_I_#I#) )',
 
     # Repression of immunity expression by AHL
-    'k_i_repr_#I#': '( K_A_I_#I#^n_A_I_#I#  / ( K_A_I_#I#^n_A_I_#I#  + A_#A#^n_A_I_#I# ) )',
+    'k_i_repr_#I#': '( K_A_I_#I#^n_A_I_#I#  / ( K_A_I_#I#^n_A_I_#I#  + (C_extra * A_#A#)^n_A_I_#I# ) )',
 
     # Induction of toxin expression by AHL
-    'k_t_ind_#T#': '( A_#A#^n_A_T_#T# / ( K_A_T_#T#^n_A_T_#T#  + A_#A#^n_A_T_#T#) )',
+    'k_t_ind_#T#': '( (C_extra * A_#A#)^n_A_T_#T# / ( K_A_T_#T#^n_A_T_#T#  + (C_extra * A_#A#)^n_A_T_#T#) )',
 
     # Repression of toxin expression by AHL
-    'k_t_repr_#T#': '( K_A_T_#T#^n_A_T_#T#  / ( K_A_T_#T#^n_A_T_#T#  + A_#A#^n_A_T_#T# ) )',
+    'k_t_repr_#T#': '( K_A_T_#T#^n_A_T_#T#  / ( K_A_T_#T#^n_A_T_#T#  + (C_extra * A_#A#)^n_A_T_#T# ) )',
 
     # Annihilation of toxin by antitoxin
     'k_ann_T_#T#_V_#V#': '( k_TV_ann * T_#T# * V_#V# )'
@@ -179,8 +179,8 @@ def gen_diff_eq_substrate(substrate_id, strain_list):
 
     # Term defining consumption of substrate by a strain
     strain_growth_rate = funcs['mu_#N#']
-    strain_consumption = strain_growth_rate + ' * N_#N# * C / g_#N# '
-    strain_production = ' N_#N# * p_#S# * C'
+    strain_consumption = strain_growth_rate + ' * N_#N# * C_OD / g_#N# '
+    strain_production = ' N_#N# * p_#S# * C_OD'
 
     # Sum of all consumption by strains
     for strain in strain_list:
@@ -234,7 +234,7 @@ def gen_microcin_diff_eq(microcin_id, strain_list):
                     for a in b.AHL_repressors:
                         dB_dt = dB_dt + ' * ' + funcs['k_b_repr_#B#'].replace('#A#', a.id)
 
-                dB_dt = dB_dt + ' * N_#N# * C '
+                dB_dt = dB_dt + ' * N_#N# * C_OD / C_extra'
                 dB_dt = dB_dt.replace('#N#', strain.id)
 
     dB_dt = dB_dt.replace('#B#', microcin_id)

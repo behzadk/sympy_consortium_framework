@@ -335,7 +335,6 @@ def two_species_no_symm(default_params_path, default_init_species_path, output_d
     print("generating reference table")
     model_space.remove_symmetries()
     print(len(model_space.models_list))
-    exit()
 
     model_space.reset_model_indexes()
 
@@ -555,8 +554,6 @@ def three_species_no_symm_auxos(default_params_path, default_init_species_path, 
     return model_space
 
 
-
-
 def three_species_no_symm(default_params_path, default_init_species_path, output_dir):
     # Set species IDs
     substrate_ids = ['glu']
@@ -621,13 +618,15 @@ def three_species_no_symm(default_params_path, default_init_species_path, output
 
     print("Generating model list")
     model_list = model_space.generate_models()
+    print(len(model_space.models_list))
+    model_space.max_immunity_filter(1)
+    print(len(model_space.models_list))
 
     model_space.remove_symmetries()
     model_space.reset_model_indexes()
 
     model_list = model_space.models_list
     print(len(model_space.models_list))
-    exit()
 
     model_space_generator.generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, immunity_ids, toxin_ids, output_dir)
     model_space_generator.generate_simulation_files(model_list, default_params_path, default_init_species_path, output_dir)

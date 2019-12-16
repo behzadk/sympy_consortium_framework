@@ -284,7 +284,6 @@ class model_space():
         microcin_production_lists = [list(i for i in m if i != None) for m in
                                      itertools.combinations(self.microcin_objects + [None for n in range(strain_max_microcin-1)], strain_max_microcin)]
 
-
         AHL_production_lists = [list(i for i in a if i != None) for a in
                                 itertools.combinations(self.AHL_objects + [None for n in range(strain_max_AHL-1)], strain_max_AHL)]
 
@@ -509,7 +508,30 @@ class model_space():
         self.models_list = keep_list
 
 
+    def max_immunity_filter(self, max_immunity):
+        keep_list = []
+        for model in tqdm(self.models_list):
+            keep_model = True
 
+            # Get all microcins of a model
+            microcins = []
+            for strain in model.strains:
+                microcins = microcins + [m.id for m in strain.microcins]
+
+            microcins = list(set(microcins))
+            print(microcins)
+
+            for strain in model.strains:
+                n_immunity = len(microcins) - len(strain.sensitivities)
+                print(n_immunity)
+
+                if n_immunity > max_immunity:
+                    keep_model = False
+
+            if keep_model:
+                keep_list.append(model)
+
+        self.models_list = keep_list
 
 
 
