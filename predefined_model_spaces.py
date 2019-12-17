@@ -10,6 +10,7 @@ from species import Substrate
 from species import AHL
 from species import Microcin
 from species import Strain
+from species import Immunity
 
 from model import Model
 import model_space_generator
@@ -633,3 +634,52 @@ def three_species_no_symm(default_params_path, default_init_species_path, output
 
     return model_space
 
+def three_species_one_pred_two_prey(default_params_path, default_init_species_path, output_dir):
+    # Set species IDs
+    substrate_ids = ['glu']
+    S_glu = Substrate(substrate_ids[0])
+    substrate_objects = [S_glu]
+
+    AHL_ids = ['1']
+    AHL_1 = AHL(AHL_ids[0])
+
+    AHL_objects = [AHL_1]
+
+    microcin_ids = ['1B', '2B']
+    strain_ids = ['1', '2', '3']
+    
+    immunity_ids = ['1B']
+    imm_species = Immunity(config_idx=1, immunity_id=immunity_ids[0], AHL_inducer_list=[AHL_objects[0]], AHL_repressor_list=[], constitutive_expression=False)
+    m_species = Microcin(config_idx=1, microcin_id=microcin_ids[0], AHL_inducer_list=[AHL_objects[0]], AHL_repressor_list=[], constitutive_expression=False)
+
+    N_1 = Strain(strain_id='1', microcin_expression=[m_species], AHL_expression=[], 
+        substrate_dependences=[substrate_objects[0]], microcin_sensitivities=[microcin_ids[0]], substrate_production=[], 
+        antitoxins=[], immunity_expression=[imm_species], toxin_expression=[])
+
+    N_2 = Strain(strain_id='2', microcin_expression=[], AHL_expression=[AHL_1], 
+        substrate_dependences=[substrate_objects[0]], microcin_sensitivities=[microcin_ids[0]], substrate_production=[], 
+        antitoxins=[], immunity_expression=[imm_species], toxin_expression=[])
+
+    N_3 = Strain(strain_id='3', microcin_expression=[], AHL_expression=[AHL_1], 
+        substrate_dependences=[substrate_objects[0]], microcin_sensitivities=[microcin_ids[0]], substrate_production=[], 
+        antitoxins=[], immunity_expression=[imm_species], toxin_expression=[])
+
+
+    model_1 = Model(1, [N_1, N_2, N_3])
+
+
+    model_list = [model_1]
+
+    for idx, m in enumerate(model_list):
+        m.build_equations()
+        m.build_symbolic_equations()
+        m.build_jacobian()
+        m.extract_species()
+        m.extract_params()
+        print("Model ", idx, "Is legal?: ", m.is_legal())
+
+    # model_space_generator.generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, [], immunity_ids, [], output_dir)
+    model_space_generator.generate_simulation_files(model_list, default_params_path, default_init_species_path, output_dir)
+
+
+    return model_space

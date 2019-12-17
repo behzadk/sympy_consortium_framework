@@ -533,12 +533,32 @@ class model_space():
 
 
     def one_predator_two_prey_filter(self):
+        keep_list = []
+
         for model in tqdm(self.models_list):
+            keep_model = True
             n_microcin_producers = 0
 
             # Only one strain produces microcins
             for strain in model.strains:
-                if len(strain.microci)
+                if len(strain.microcins) > 0:
+                    n_microcin_producers += 1
+
+            if n_microcin_producers > 1:
+                keep_model = False
+                continue
+
+            # All species sensitive to at least one microcin
+            for strain in model.strains:
+                if len(strain.sensitivities) < 0:
+                    keep_model = False
+
+            if keep_model == True:
+                keep_list.append(model)
+
+        return keep_list
+
+
 
     def generate_model_reference_table(self, max_microcin_parts, max_AHL_parts,
                                        max_substrate_dependencies, max_microcin_sensitivities):
