@@ -223,15 +223,18 @@ def mccardell(model_idx, adj_mat_out_dir):
 
     toxin_ids = ['1T', '2T']
     strain_ids = ['1', '2']
+    antitoxin_ids = ['1T', '1T']
 
     A_1 = AHL(AHL_ids[0])
     A_2 = AHL(AHL_ids[1])
 
-    T_1 = Toxin(config_idx=0, toxin_id=toxin_ids[0], AHL_inducer_list=[A_1], AHL_repressor_list=[], constitutive_expression=True)
+    T_1 = Toxin(config_idx=0, toxin_id=toxin_ids[0], AHL_inducer_list=[A_1], AHL_repressor_list=[], constitutive_expression=False)
 
     # AHL from strain 1 induces toxin in strain 2
-    T_2 = Toxin(config_idx=1, toxin_id=toxin_ids[1], AHL_inducer_list=[A_2], AHL_repressor_list=[A_1], constitutive_expression=False)
+    T_2 = Toxin(config_idx=1, toxin_id=toxin_ids[1], AHL_inducer_list=[A_2], AHL_repressor_list=[], constitutive_expression=False)
 
+    V_1 = Antitoxin(config_idx=0, antitoxin_id=antitoxin_ids[0], AHL_inducer_list=[A_2], AHL_repressor_list=[], constitutive_expression=False)
+    V_2 = Antitoxin(config_idx=1, antitoxin_id=antitoxin_ids[1], AHL_inducer_list=[A_1], AHL_repressor_list=[], constitutive_expression=False)
 
     N_1 = Strain(strain_id=strain_ids[0],
                  microcin_expression=[],
@@ -239,7 +242,7 @@ def mccardell(model_idx, adj_mat_out_dir):
                  substrate_dependences=[S_glu],
                  microcin_sensitivities=[],
                  substrate_production=[],
-                 antitoxins=[],
+                 antitoxins=[V_1],
                  immunity_expression=[],
                  toxin_expression=[T_1])
 
@@ -249,15 +252,31 @@ def mccardell(model_idx, adj_mat_out_dir):
                  substrate_dependences=[S_glu],
                  microcin_sensitivities=[],
                  substrate_production=[],
-                 antitoxins=[],
+                 antitoxins=[V_2],
                  immunity_expression=[],
                  toxin_expression=[T_2])
 
 
     mccardell = Model(model_idx=model_idx, strain_list=[N_1, N_2])
 
-    mccardell.generate_adjacency_matrix(len(substrate_ids), len(AHL_ids), 0, len(strain_ids), 0, 0, len(toxin_ids))
-    mccardell.write_adj_matrix(adj_mat_out_dir, [], AHL_ids, strain_ids, substrate_ids, [], [], toxin_ids)
+    mccardell.generate_adjacency_matrix(
+        max_sub=len(substrate_ids), 
+        max_AHL=len(AHL_ids), 
+        max_mic=0, 
+        max_strains=len(strain_ids), 
+        max_antitoxin=len(antitoxin_ids), 
+        max_immunity=0, 
+        max_toxin=len(toxin_ids)
+        )
+
+    mccardell.write_adj_matrix(output_dir=adj_mat_out_dir, 
+        mic_ids=[], 
+        AHL_ids=AHL_ids, 
+        strain_ids=strain_ids, 
+        substrate_ids=substrate_ids, 
+        antitoxin_ids=antitoxin_ids,
+        immunity_ids=[], 
+        toxin_ids=toxin_ids)
 
     return mccardell
 

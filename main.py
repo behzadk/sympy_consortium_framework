@@ -146,6 +146,7 @@ def spock_manu_no_symm():
     print(len(model_list))
 
     generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, immunity_ids, toxin_ids, output_dir)
+    
     # Add additional models
     print("Balagadde model: ", len(model_space.models_list))
     bala_model = predefined_model_spaces.balagadde(len(model_space.models_list), output_dir)
