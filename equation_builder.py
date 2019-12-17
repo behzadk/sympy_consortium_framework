@@ -160,14 +160,18 @@ def gen_diff_eq_immunity(immunity_id, strain_list):
                         dI_dt = dI_dt + ' * ' + funcs['k_i_repr_#I#'].replace('#A#', a.id)
 
                 # Get growth rate of strain producing
-                dI_dt = dI_dt + ' - I_#I# '
+                dI_dt = dI_dt + ' - ( I_#I# * C_intra '
+
+                grwth_dilution = ''
                 for s in strain.substrate_dependences:
-                    dI_dt = dI_dt + ' * ( ' + funcs['mu_#N#'].replace('#S#', s.id) + ' ) '
-                
-                dI_dt = dI_dt + ' / 2 '
+                    grwth_dilution = grwth_dilution + ' * ( ' + funcs['mu_#N#'].replace('#S#', s.id) 
+
+
+                dI_dt = dI_dt + grwth_dilution
+                dI_dt = dI_dt + ' / 2 ) ) '
                 dI_dt = dI_dt.replace('#N#', strain.id)
 
-
+    dI_dt = dI_dt + ' * 1  / C_intra '
     dI_dt = dI_dt.replace('#I#', immunity_id)
     I_key = 'I_#I#'.replace('#I#', immunity_id)
 
