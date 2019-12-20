@@ -676,10 +676,12 @@ def three_species_one_pred_two_prey(default_params_path, default_init_species_pa
         m.build_jacobian()
         m.extract_species()
         m.extract_params()
+        m.generate_adjacency_matrix(1, 1, 2, 3, 0, 1, 0)
+
         print("Model ", idx, "Is legal?: ", m.is_legal())
 
-    # model_space_generator.generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, [], immunity_ids, [], output_dir)
+    model_space_generator.generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, [], immunity_ids, [], output_dir)
     model_space_generator.generate_simulation_files(model_list, default_params_path, default_init_species_path, output_dir)
 
 
-    return model_space
+    # return model_space

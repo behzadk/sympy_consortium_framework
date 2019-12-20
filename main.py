@@ -71,7 +71,7 @@ def three_species_no_symm_auxos():
 
 
 def three_species_no_symm():
-    output_dir = "./output/input_files_three_species_0/"
+    output_dir = "./output/input_files_three_species_1/"
     default_params_path = './default_params/default/default_params.csv'
     default_init_species_path = './default_params/default/default_init_species.csv'
 
@@ -88,8 +88,8 @@ def three_species_one_pred_two_prey():
 def main():
     # single_strain_test()
     # spock_manu_no_symm()
-    three_species_one_pred_two_prey()
-    exit()
+    # three_species_one_pred_two_prey()
+    # exit()
     three_species_no_symm()
     # two_species_no_symm()
     # two_species_no_symm_auxos()

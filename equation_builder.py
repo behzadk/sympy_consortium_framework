@@ -238,9 +238,10 @@ def gen_microcin_diff_eq(microcin_id, strain_list):
                     for a in b.AHL_repressors:
                         dB_dt = dB_dt + ' * ' + funcs['k_b_repr_#B#'].replace('#A#', a.id)
 
-                dB_dt = dB_dt + ' * N_#N# * C_OD / C_extra'
+                dB_dt = dB_dt + ' * N_#N# * C_OD '
                 dB_dt = dB_dt.replace('#N#', strain.id)
 
+    dB_dt = dB_dt + ' * 1 / C_extra'
     dB_dt = dB_dt.replace('#B#', microcin_id)
     B_key = 'B_#B#'.replace('#B#', microcin_id)
 
