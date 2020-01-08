@@ -410,11 +410,12 @@ class model_space():
                 new_adj = model_adj.copy()
                 # Shuffle first configuration to new configuration
                 new_adj.T[[original_config]] = new_adj.T[[perm]]
-                # new_adj[[original_config]] = new_adj[[perm]]
+                new_adj[[original_config]] = new_adj[[perm]]
+
                 if any(np.array_equal(x, new_adj) for x in clean_stage_1_adj_mats):
                     match = True
                     break
-                    
+            
             if match is False:
                 keep_idx_1.append(idx)
         

@@ -564,7 +564,7 @@ def three_species_no_symm(default_params_path, default_init_species_path, output
     AHL_1 = AHL(AHL_ids[0])
     AHL_2 = AHL(AHL_ids[1])
 
-    AHL_objects = [AHL_1, AHL_2]
+    AHL_objects = [AHL_1]
 
     microcin_ids = ['1', '2', '3']
     strain_ids = ['1', '2', '3']
@@ -586,7 +586,7 @@ def three_species_no_symm(default_params_path, default_init_species_path, output
     microcin_objects, microcin_configs_df = model_space_generator.generate_microcin_combinations(microcin_ids,
                                                                                                  AHL_objects,
                                                                                                  microcin_induced=True,
-                                                                                                 microcin_repressed=True, microcin_constitutive=True)
+                                                                                                 microcin_repressed=False, microcin_constitutive=False)
     toxin_objects, toxin_configs_df = model_space_generator.generate_toxin_combinations(toxin_ids,
                                                                                                  AHL_objects,
                                                                                                  toxin_induced=False,
@@ -607,11 +607,11 @@ def three_species_no_symm(default_params_path, default_init_species_path, output
     model_space = model_space_generator.model_space(strain_ids, microcin_objects,
                                                     AHL_objects, substrate_objects, antitoxin_objects, immunity_objects, toxin_objects,
                                                     max_microcin_parts, max_AHL_parts,
-                                                    max_substrate_parts, max_antitoxins, max_immunity_parts, max_toxin_parts, max_microcin_sensitivities=2)
+                                                    max_substrate_parts, max_antitoxins, max_immunity_parts, max_toxin_parts, max_microcin_sensitivities=1)
 
     part_combos = model_space.generate_part_combinations(
         strain_max_microcin=1, strain_max_AHL=1, strain_max_sub_dependencies=1, 
-        strain_max_microcin_sens=2, strain_max_sub_production=0, strain_max_antitoxin=0, 
+        strain_max_microcin_sens=1, strain_max_sub_production=0, strain_max_antitoxin=0, 
         strain_max_immunity=1, strain_max_toxin=0
         )
     print(len(part_combos))
