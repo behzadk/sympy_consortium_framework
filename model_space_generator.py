@@ -367,10 +367,16 @@ class model_space():
         # Check for direct matches where two adjacency matrices match
         print("Removing direct symmetries")
         for idx, model in enumerate(tqdm(self.models_list)):
-            if any(np.array_equal(x, model.adjacency_matrix) for x in all_adj_mats):
-                continue
 
-            else:
+            keep_model = True
+
+            # Check if candidate is equal to any matrix in any already stored
+            for x in all_adj_mats:
+                if np.array_equal(x, model.adjacency_matrix):
+                    keep_model = False
+                    break
+                    
+            if keep_model:
                 keep_idx_0.append(idx)
                 all_adj_mats.append(model.adjacency_matrix)
 

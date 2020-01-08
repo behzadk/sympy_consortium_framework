@@ -16,22 +16,6 @@ from tqdm import tqdm
 
 import predefined_model_spaces
 
-# class PowForDoubleStar(ast.NodeTransformer):
-#     def visit_BinOp(self, node):
-#         node.left = self.visit(node.left)
-#         node.right = self.visit(node.right)
-#         pow_func = ast.parse("math.pow", mode="eval").body
-#         if isinstance(node.op, ast.Pow):
-#             node = ast.copy_location(
-#                        ast.Call(func=pow_func,
-#                                 args=[node.left, node.right],
-#                                 keywords=[]
-#                                ),
-#                        node
-#                    )
-
-#         return node
-
 
 def spock_manu_no_symm():
     output_dir = "./output/input_files_two_species_spock_manu_1/"
@@ -71,7 +55,7 @@ def three_species_no_symm_auxos():
 
 
 def three_species_no_symm():
-    output_dir = "./output/input_files_three_species_1/"
+    output_dir = "./output/input_files_three_species_3/"
     default_params_path = './default_params/default/default_params.csv'
     default_init_species_path = './default_params/default/default_init_species.csv'
 

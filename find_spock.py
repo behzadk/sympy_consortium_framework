@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import glob
 
-def main():
+def find_spock():
 	adj_mat_dir = "./output/input_files_two_species_spock_manu_0/adj_matricies/"
 	adj_mat_files = glob.glob(adj_mat_dir + '*.csv')
 
@@ -50,5 +50,50 @@ def main():
 			exit()
 
 
+def find_this_thing():
+	adj_mat_dir = "./output/input_files_three_species_1/adj_matricies/"
+	adj_mat_files = glob.glob(adj_mat_dir + '*.csv')
+
+	for f in adj_mat_files:
+		df = pd.read_csv(f)
+		header = list(df)[1:]
+		mat = df.values
+		mat = mat[:, 1:]
+
+		# Is producing AHL
+		A_1_idx = header.index("A_1")
+		A_2_idx = header.index("A_2")
+
+		B_1_idx = header.index("B_1")
+		B_2_idx = header.index("B_2")
+		B_3_idx = header.index("B_3")
+
+		N_1_idx = header.index("N_1")
+		N_2_idx = header.index("N_2")
+		N_3_idx = header.index("N_3")
+
+		is_thing = True
+
+		if not sum(mat[:, B_1_idx]) < 0:
+			is_thing = False
+
+		if not sum(mat[:, B_2_idx]) < 0:
+			is_thing = False
+
+		if not sum(mat[:, B_3_idx]) < 0:
+			is_thing = False
+
+		if is_thing:
+			print(header)
+			print(mat)
+			print(f)
+			exit()
+
+
+
+
+
+
+
 if __name__ == "__main__":
-	main()
+	find_this_thing()

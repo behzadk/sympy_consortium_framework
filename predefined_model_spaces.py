@@ -16,7 +16,6 @@ from model import Model
 import model_space_generator
 
 
-
 def known_two_strain_systems():
     AHL_1 = AHL('1')
     AHL_2 = AHL('2')
@@ -608,12 +607,12 @@ def three_species_no_symm(default_params_path, default_init_species_path, output
     model_space = model_space_generator.model_space(strain_ids, microcin_objects,
                                                     AHL_objects, substrate_objects, antitoxin_objects, immunity_objects, toxin_objects,
                                                     max_microcin_parts, max_AHL_parts,
-                                                    max_substrate_parts, max_antitoxins, max_immunity_parts, max_toxin_parts, max_microcin_sensitivities=3)
+                                                    max_substrate_parts, max_antitoxins, max_immunity_parts, max_toxin_parts, max_microcin_sensitivities=2)
 
     part_combos = model_space.generate_part_combinations(
         strain_max_microcin=1, strain_max_AHL=1, strain_max_sub_dependencies=1, 
-        strain_max_microcin_sens=1, strain_max_sub_production=0, strain_max_antitoxin=1, 
-        strain_max_immunity=1, strain_max_toxin=1
+        strain_max_microcin_sens=2, strain_max_sub_production=0, strain_max_antitoxin=0, 
+        strain_max_immunity=1, strain_max_toxin=0
         )
     print(len(part_combos))
 
