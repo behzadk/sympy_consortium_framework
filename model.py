@@ -533,6 +533,10 @@ class Model:
         #             return False
 
 
+        for strain in self.strains:
+            if len(strain.substrate_dependences) == 0:
+                return False
+
 
         # Remove models where antitoxin has no cognate toxin
         for strain in self.strains:

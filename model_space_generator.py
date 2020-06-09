@@ -242,6 +242,7 @@ def remove_identical_part_lists(parts_list):
         if unique:
             unique_part_combos.append(candidate)
 
+
     return unique_part_combos
 
 ##
@@ -358,7 +359,102 @@ class model_space():
                                     for t in toxin_list:
                                         self.part_combinations.append([m, a, s, sensi, s_prod, v, i, t])
 
+        keep_combinations = []
+        for x in self.part_combinations:
+            if len(x[2]) == 0:
+                continue
+
+            if x in keep_combinations:
+                print(x)
+                print("yes!")
+                continue
+
+            else:
+                keep_combinations.append(x)
+
+        self.part_combinations = keep_combinations
+        # exit()
+
         return self.part_combinations
+
+
+    def remove_direct_symmetries(self):
+        all_adj_mats = []
+        keep_idx_0 = []
+        adj_mat_sums = []
+
+        # Check for direct matches where two adjacency matrices match
+        print("Removing direct symmetries")
+        for idx, model in enumerate(tqdm(self.models_list)):
+
+            keep_model = True
+
+            mat_sum = model.adjacency_matrix.sum()
+            candidate_idxs = np.argwhere(np.array(adj_mat_sums) == mat_sum)
+
+            # Check if candidate is equal to any matrix in any already stored
+            for i in candidate_idxs:
+                if np.array_equal(all_adj_mats[i[0]], model.adjacency_matrix):
+                    keep_model = False
+                    break
+                    
+            if keep_model:
+                keep_idx_0.append(idx)
+                all_adj_mats.append(model.adjacency_matrix)
+                adj_mat_sums.append(mat_sum)
+
+
+        self.models_list = [self.models_list[i] for i in keep_idx_0]
+        print("after direct symmetry removal: ", len(self.models_list))
+
+
+    def remove_indirect_symmetries(self):
+        strain_init_idx = 0
+        microcin_init_idx = strain_init_idx + len(self.strain_ids) + len(self.substrate_objects)
+        AHL_init_idx = microcin_init_idx + self.max_microcin_parts
+
+        strains_index_range = range(strain_init_idx, len(self.strain_ids))
+        mic_index_range = range(microcin_init_idx, microcin_init_idx + self.max_microcin_parts)
+        AHL_index_range = range(AHL_init_idx, AHL_init_idx + self.max_AHL_parts)
+
+        # Flip strain columns and remove symmetrical strains
+        keep_idx = []
+        clean_adj_mats = []
+        adj_mat_sums = []
+
+        print("Removing indirect symmetries")
+
+        for idx, model in enumerate(tqdm(self.models_list)):
+            permute_strains = list(itertools.permutations(strains_index_range))
+            original_config = permute_strains[0]
+            candidate_adj_mat = model.adjacency_matrix
+
+            mat_sum = candidate_adj_mat.sum()
+            candidate_idxs = np.argwhere(np.array(adj_mat_sums) == mat_sum)
+
+            match = False
+            for perm in permute_strains[1:]:
+                new_adj = candidate_adj_mat.copy()
+
+                # Shuffle first configuration to new configuration
+                new_adj.T[[original_config]] = new_adj.T[[perm]]
+                new_adj[[original_config]] = new_adj[[perm]]
+
+                for adj_idx in candidate_idxs:
+                    if np.array_equal(clean_adj_mats[adj_idx[0]], new_adj):
+                        match = True
+                        break
+                if match:
+                    break
+            
+            if match is False:
+                keep_idx.append(idx)
+                clean_adj_mats.append(candidate_adj_mat)
+                adj_mat_sums.append(mat_sum)
+
+        self.models_list = [self.models_list[i] for i in keep_idx]
+        print("after indirect symmetry removal: ", len(self.models_list))
+
 
     def remove_symmetries(self):
         all_adj_mats = []
@@ -489,6 +585,8 @@ class model_space():
 
         self.models_list = keep_list
 
+
+
     def aux_filter(self):
         keep_list = []
 
@@ -538,6 +636,33 @@ class model_space():
 
         self.models_list = keep_list
 
+    # Remove models containing strains that are 
+    # sensitive to their own constitutive microcin
+    def self_sensitivity_filter(self, remove_constitutive_only=False):
+        keep_list = []
+        for model in tqdm(self.models_list):
+            keep_model = True
+
+            for strain in model.strains:
+                # Get constitutive microcins of a model
+
+                if remove_constitutive_only:
+                    expressed_microcins = [m.id for m in strain.microcins if m.constitutive_expression]
+                
+                else:
+                    expressed_microcins = [m.id for m in strain.microcins]
+
+                for m in expressed_microcins:
+                    if m in strain.sensitivities:
+                        keep_model = False
+
+            if keep_model:
+                keep_list.append(model)
+
+        self.models_list = keep_list
+
+
+
 
     def one_predator_two_prey_filter(self):
         keep_list = []
@@ -564,7 +689,6 @@ class model_space():
                 keep_list.append(model)
 
         return keep_list
-
 
 
     def generate_model_reference_table(self, max_microcin_parts, max_AHL_parts,

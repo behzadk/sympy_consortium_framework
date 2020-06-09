@@ -16,13 +16,13 @@ funcs = {
     'A_production': 'kA_#A# * N_#N# * C_OD / C_extra',
 
     # Function defining sensitivity to microcin
-    'omega_B': ' omega_max * (C_extra * B_#B#)^n_omega / ( k_omega_B_#B#^n_omega + (C_extra * B_#B#)^n_omega ) ',
+    'omega_B': ' omega_max * (C_extra * B_#B#)^n_omega / ( k_omega_B_#B#^n_omega + (C_extra *  B_#B#)^n_omega ) ',
 
     # Function defining sensitivity to microcin
     'omega_T': '( k_omega_T_#T# * T_#T# )',
 
     # Induction of antitoxin expression by AHL
-    'k_v_ind_#V#': '( (C_extra * A_#A#)^n_A_V_#V# / ( K_A_V_#V#^n_A_V_#V#  + (C_extra * A_#A#)^n_A_V_#V#) )',
+    'k_v_ind_#V#': '( (C_extra *  A_#A#)^n_A_V_#V# / ( K_A_V_#V#^n_A_V_#V#  + (C_extra * A_#A#)^n_A_V_#V#) )',
 
     # Repression of antitoxin expression by AHL
     'k_v_repr_#V#': '( K_A_V_#V#^n_A_V_#V#  / ( K_A_V_#V#^n_A_V_#V#  + (C_extra * A_#A#)^n_A_V_#V# ) )',
@@ -35,7 +35,7 @@ funcs = {
     'k_i_ind_#I#': '( (C_extra * A_#A#)^n_A_I_#I# / ( K_A_I_#I#^n_A_I_#I#  + (C_extra * A_#A#)^n_A_I_#I#) )',
 
     # Repression of immunity expression by AHL
-    'k_i_repr_#I#': '( K_A_I_#I#^n_A_I_#I#  / ( K_A_I_#I#^n_A_I_#I#  + (C_extra * A_#A#)^n_A_I_#I# ) )',
+    'k_i_repr_#I#': '( K_A_I_#I#^n_A_I_#I#  / ( K_A_I_#I#^n_A_I_#I#  + (C_extra *  A_#A#)^n_A_I_#I# ) )',
 
     # Induction of toxin expression by AHL
     'k_t_ind_#T#': '( (C_extra * A_#A#)^n_A_T_#T# / ( K_A_T_#T#^n_A_T_#T#  + (C_extra * A_#A#)^n_A_T_#T#) )',
@@ -147,7 +147,7 @@ def gen_diff_eq_immunity(immunity_id, strain_list):
 
         for i in strain.immunity:
             if i.id is immunity_id:
-                dI_dt = dI_dt + ' + ' + ' kI_max_#I# '
+                dI_dt = dI_dt + ' + ' + ' kI_max_#I# / C_intra '
 
                 if i.AHL_inducers is not np.nan:
 
@@ -171,7 +171,7 @@ def gen_diff_eq_immunity(immunity_id, strain_list):
                 dI_dt = dI_dt + ' / 2 ) ) '
                 dI_dt = dI_dt.replace('#N#', strain.id)
 
-    dI_dt = dI_dt + ' * 1  / C_intra '
+                dI_dt = dI_dt + ' * 1  / C_intra '
     dI_dt = dI_dt.replace('#I#', immunity_id)
     I_key = 'I_#I#'.replace('#I#', immunity_id)
 
@@ -238,10 +238,9 @@ def gen_microcin_diff_eq(microcin_id, strain_list):
                     for a in b.AHL_repressors:
                         dB_dt = dB_dt + ' * ' + funcs['k_b_repr_#B#'].replace('#A#', a.id)
 
-                dB_dt = dB_dt + ' * N_#N# * C_OD '
+                dB_dt = dB_dt + ' * N_#N# * C_OD / C_extra '
                 dB_dt = dB_dt.replace('#N#', strain.id)
 
-    dB_dt = dB_dt + ' * 1 / C_extra'
     dB_dt = dB_dt.replace('#B#', microcin_id)
     B_key = 'B_#B#'.replace('#B#', microcin_id)
 

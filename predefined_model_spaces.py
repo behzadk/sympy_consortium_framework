@@ -105,22 +105,20 @@ def single_strain_test(default_params_path, default_init_species_path, output_di
     # Set species IDs
     substrate_ids = ['glu']
     S_glu = Substrate(substrate_ids[0])
-    # S_trp = Substrate(substrate_ids[1])
-
     substrate_objects = [S_glu]
 
-    AHL_ids = ['1']
+    AHL_ids = ['1', '2']
     AHL_1 = AHL(AHL_ids[0])
-    # AHL_2 = AHL(AHL_ids[1])
+    AHL_2 = AHL(AHL_ids[1])
 
-    AHL_objects = [AHL_1]
-
+    AHL_objects = [AHL_1, AHL_2]
 
     microcin_ids = ['1']
-    toxin_ids = ['1T']
-    antitoxin_ids = ['1T'] # Name of antitoxins must match name of toxin.(B_#ID# format)
-    immunity_ids = ['1']
     strain_ids = ['1']
+
+    toxin_ids = []
+    antitoxin_ids = [] # Name of antitoxins must match name of toxin.(B_#ID# format)
+    immunity_ids = []
 
     # Numerical maximum number of parts
     max_substrate_parts = len(substrate_objects)
@@ -135,7 +133,7 @@ def single_strain_test(default_params_path, default_init_species_path, output_di
     microcin_objects, microcin_configs_df = model_space_generator.generate_microcin_combinations(microcin_ids,
                                                                                                  AHL_objects,
                                                                                                  microcin_induced=False,
-                                                                                                 microcin_repressed=False, microcin_constitutive=True)
+                                                                                                 microcin_repressed=False, microcin_constitutive=False)
     toxin_objects, toxin_configs_df = model_space_generator.generate_toxin_combinations(toxin_ids,
                                                                                                  AHL_objects,
                                                                                                  toxin_induced=False,
@@ -159,25 +157,32 @@ def single_strain_test(default_params_path, default_init_species_path, output_di
                                                     max_substrate_parts, max_antitoxins, max_immunity_parts, max_toxin_parts, max_microcin_sensitivities=1)
 
     part_combos = model_space.generate_part_combinations(
-        strain_max_microcin=1, strain_max_AHL=1, strain_max_sub_dependencies=1, 
-        strain_max_microcin_sens=1, strain_max_sub_production=0, strain_max_antitoxin=1, 
-        strain_max_immunity=1, strain_max_toxin=1
+        strain_max_microcin=1, strain_max_AHL=1, strain_max_sub_dependencies=1,
+        strain_max_microcin_sens=1, strain_max_sub_production=0, strain_max_antitoxin=0, 
+        strain_max_immunity=0, strain_max_toxin=0
         )
+
+    print(len(part_combos))
 
     print("Generating model list")
     model_list = model_space.generate_models()
-    print("generating reference table")
-
-    # models_ref_df = model_space.generate_model_reference_table(max_microcin_parts, max_AHL_parts,
-    #                                                            max_substrate_parts, max_microcin_parts)
-
-    model_space.remove_symmetries()
+    print(len(model_space.models_list))
+    # model_space.max_immunity_filter(1)
+    model_space.self_sensitivity_filter()
+    print(len(model_space.models_list))
+    model_space.remove_direct_symmetries()
+    model_space.remove_indirect_symmetries()
+    # model_space.remove_indirect_symmetries()
+    # model_space.remove_symmetries()
     model_space.reset_model_indexes()
 
     model_list = model_space.models_list
+    print(len(model_space.models_list))
 
-    generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, immunity_ids, toxin_ids, output_dir)
-    generate_simulation_files(model_list, default_params_path, default_init_species_path, output_dir)
+    model_space_generator.generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, antitoxin_ids, immunity_ids, toxin_ids, output_dir)
+    model_space_generator.generate_simulation_files(model_list, default_params_path, default_init_species_path, output_dir)
+
+    return model_space
 
 
 def spock_manu_no_symm(default_params_path, default_init_species_path, output_dir):
@@ -301,7 +306,7 @@ def two_species_no_symm(default_params_path, default_init_species_path, output_d
     microcin_objects, microcin_configs_df = model_space_generator.generate_microcin_combinations(microcin_ids,
                                                                                                  AHL_objects,
                                                                                                  microcin_induced=True,
-                                                                                                 microcin_repressed=True, microcin_constitutive=True)
+                                                                                                 microcin_repressed=True, microcin_constitutive=False)
     toxin_objects, toxin_configs_df = model_space_generator.generate_toxin_combinations(toxin_ids,
                                                                                                  AHL_objects,
                                                                                                  toxin_induced=False,
@@ -322,18 +327,22 @@ def two_species_no_symm(default_params_path, default_init_species_path, output_d
     model_space = model_space_generator.model_space(strain_ids, microcin_objects,
                                                     AHL_objects, substrate_objects, antitoxin_objects, immunity_objects, toxin_objects,
                                                     max_microcin_parts, max_AHL_parts,
-                                                    max_substrate_parts, max_antitoxins, max_immunity_parts, max_toxin_parts, max_microcin_sensitivities=2)
+                                                    max_substrate_parts, max_antitoxins, max_immunity_parts, max_toxin_parts, max_microcin_sensitivities=1)
 
     part_combos = model_space.generate_part_combinations(
         strain_max_microcin=1, strain_max_AHL=1, strain_max_sub_dependencies=1, 
-        strain_max_microcin_sens=2, strain_max_sub_production=0, strain_max_antitoxin=1, 
+        strain_max_microcin_sens=1, strain_max_sub_production=0, strain_max_antitoxin=0, 
         strain_max_immunity=0, strain_max_toxin=0
         )
 
     print("Generating model list")
     model_list = model_space.generate_models()
     print("generating reference table")
-    model_space.remove_symmetries()
+    # model_space.self_sensitivity_filter()
+    model_space.remove_direct_symmetries()
+    model_space.remove_indirect_symmetries()
+
+    # model_space.remove_symmetries()
     print(len(model_space.models_list))
 
     model_space.reset_model_indexes()
@@ -564,9 +573,10 @@ def three_species_no_symm(default_params_path, default_init_species_path, output
     AHL_1 = AHL(AHL_ids[0])
     AHL_2 = AHL(AHL_ids[1])
 
-    AHL_objects = [AHL_1]
+    AHL_objects = [AHL_1, AHL_2]
 
     microcin_ids = ['1', '2', '3']
+
     strain_ids = ['1', '2', '3']
 
     toxin_ids = []
@@ -586,7 +596,8 @@ def three_species_no_symm(default_params_path, default_init_species_path, output
     microcin_objects, microcin_configs_df = model_space_generator.generate_microcin_combinations(microcin_ids,
                                                                                                  AHL_objects,
                                                                                                  microcin_induced=True,
-                                                                                                 microcin_repressed=False, microcin_constitutive=False)
+                                                                                                 microcin_repressed=True, microcin_constitutive=False)
+
     toxin_objects, toxin_configs_df = model_space_generator.generate_toxin_combinations(toxin_ids,
                                                                                                  AHL_objects,
                                                                                                  toxin_induced=False,
@@ -610,19 +621,37 @@ def three_species_no_symm(default_params_path, default_init_species_path, output
                                                     max_substrate_parts, max_antitoxins, max_immunity_parts, max_toxin_parts, max_microcin_sensitivities=1)
 
     part_combos = model_space.generate_part_combinations(
-        strain_max_microcin=1, strain_max_AHL=1, strain_max_sub_dependencies=1, 
+        strain_max_microcin=1, strain_max_AHL=1, strain_max_sub_dependencies=1,
         strain_max_microcin_sens=1, strain_max_sub_production=0, strain_max_antitoxin=0, 
-        strain_max_immunity=1, strain_max_toxin=0
+        strain_max_immunity=0, strain_max_toxin=0
         )
+
+    # keep_part_combos = []
+
+    # for p in part_combos:
+    #     if len(p[0]) != 1:
+    #         continue
+
+    #     if len(p[1]) != 1:
+    #         continue
+
+    #     keep_part_combos.append(p)
+
+    # part_combos = keep_part_combos
+    # model_space.part_combinations = part_combos
+
     print(len(part_combos))
+    # model_space.remove_illegal_strains()
 
     print("Generating model list")
     model_list = model_space.generate_models()
     print(len(model_space.models_list))
-    model_space.max_immunity_filter(1)
-    print(len(model_space.models_list))
+    # model_space.max_immunity_filter(1)
+    # model_space.self_sensitivity_filter(remove_constitutive_only=True)
 
-    model_space.remove_symmetries()
+    print(len(model_space.models_list))
+    model_space.remove_direct_symmetries()
+    model_space.remove_indirect_symmetries()
     model_space.reset_model_indexes()
 
     model_list = model_space.models_list
@@ -644,12 +673,12 @@ def three_species_one_pred_two_prey(default_params_path, default_init_species_pa
 
     AHL_objects = [AHL_1]
 
-    microcin_ids = ['1B', '2B']
+    microcin_ids = ['1B']
     strain_ids = ['1', '2', '3']
     
     immunity_ids = ['1B']
     imm_species = Immunity(config_idx=1, immunity_id=immunity_ids[0], AHL_inducer_list=[AHL_objects[0]], AHL_repressor_list=[], constitutive_expression=False)
-    m_species = Microcin(config_idx=1, microcin_id=microcin_ids[0], AHL_inducer_list=[AHL_objects[0]], AHL_repressor_list=[], constitutive_expression=False)
+    m_species = Microcin(config_idx=1, microcin_id=microcin_ids[0], AHL_inducer_list=[], AHL_repressor_list=[], constitutive_expression=True)
 
     N_1 = Strain(strain_id='1', microcin_expression=[m_species], AHL_expression=[], 
         substrate_dependences=[substrate_objects[0]], microcin_sensitivities=[microcin_ids[0]], substrate_production=[], 
@@ -657,14 +686,14 @@ def three_species_one_pred_two_prey(default_params_path, default_init_species_pa
 
     N_2 = Strain(strain_id='2', microcin_expression=[], AHL_expression=[AHL_1], 
         substrate_dependences=[substrate_objects[0]], microcin_sensitivities=[microcin_ids[0]], substrate_production=[], 
-        antitoxins=[], immunity_expression=[imm_species], toxin_expression=[])
+        antitoxins=[], immunity_expression=[], toxin_expression=[])
 
     N_3 = Strain(strain_id='3', microcin_expression=[], AHL_expression=[AHL_1], 
         substrate_dependences=[substrate_objects[0]], microcin_sensitivities=[microcin_ids[0]], substrate_production=[], 
-        antitoxins=[], immunity_expression=[imm_species], toxin_expression=[])
+        antitoxins=[], immunity_expression=[], toxin_expression=[])
 
 
-    model_1 = Model(1, [N_1, N_2, N_3])
+    model_1 = Model(0, [N_1, N_2, N_3])
 
 
     model_list = [model_1]
@@ -675,12 +704,103 @@ def three_species_one_pred_two_prey(default_params_path, default_init_species_pa
         m.build_jacobian()
         m.extract_species()
         m.extract_params()
-        m.generate_adjacency_matrix(1, 1, 2, 3, 0, 1, 0)
+        m.generate_adjacency_matrix(max_sub=1, max_AHL=1, max_mic=1, max_strains=3, max_antitoxin=0, max_immunity=1, max_toxin=0)
 
         print("Model ", idx, "Is legal?: ", m.is_legal())
 
     model_space_generator.generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, [], immunity_ids, [], output_dir)
     model_space_generator.generate_simulation_files(model_list, default_params_path, default_init_species_path, output_dir)
 
+def three_species_one_pred_two_prey_alt(default_params_path, default_init_species_path, output_dir):
+    # Set species IDs
+    substrate_ids = ['glu']
+    S_glu = Substrate(substrate_ids[0])
+    substrate_objects = [S_glu]
+
+    AHL_ids = ['1', '2', '3']
+    AHL_1 = AHL(AHL_ids[0])
+    AHL_2 = AHL(AHL_ids[1])
+    AHL_3 = AHL(AHL_ids[2])
+
+    AHL_objects = [AHL_1, AHL_2, AHL_3]
+
+    microcin_ids = ['1B', '2B', '3B']
+    strain_ids = ['1', '2', '3']
+    
+    immunity_ids = ['1B']
+
+    imm_species = Immunity(config_idx=1, immunity_id=immunity_ids[0], AHL_inducer_list=[AHL_2], AHL_repressor_list=[], constitutive_expression=False)
+    
+    m_species_pred = Microcin(config_idx=1, microcin_id=microcin_ids[0], AHL_inducer_list=[], AHL_repressor_list=[], constitutive_expression=True)
+    m_species_prey_1 = Microcin(config_idx=1, microcin_id=microcin_ids[1], AHL_inducer_list=[AHL_1], AHL_repressor_list=[], constitutive_expression=False)
+    m_species_prey_2 = Microcin(config_idx=1, microcin_id=microcin_ids[2], AHL_inducer_list=[AHL_1], AHL_repressor_list=[], constitutive_expression=False)
+
+    # Predator
+    N_1 = Strain(strain_id='1', microcin_expression=[m_species_pred], AHL_expression=[AHL_1], 
+        substrate_dependences=[substrate_objects[0]], microcin_sensitivities=[microcin_ids[0]], substrate_production=[], 
+        antitoxins=[], immunity_expression=[imm_species], toxin_expression=[])
+
+    N_2 = Strain(strain_id='2', microcin_expression=[m_species_prey_1], AHL_expression=[AHL_2], 
+        substrate_dependences=[substrate_objects[0]], microcin_sensitivities=[microcin_ids[1]], substrate_production=[], 
+        antitoxins=[], immunity_expression=[], toxin_expression=[])
+
+    N_3 = Strain(strain_id='3', microcin_expression=[m_species_prey_2], AHL_expression=[AHL_2], 
+        substrate_dependences=[substrate_objects[0]], microcin_sensitivities=[microcin_ids[2]], substrate_production=[], 
+        antitoxins=[], immunity_expression=[], toxin_expression=[])
+
+
+    model_0 = Model(0, [N_1, N_2, N_3])
+
+    m_species_pred = Microcin(config_idx=1, microcin_id=microcin_ids[0], AHL_inducer_list=[], AHL_repressor_list=[AHL_2], constitutive_expression=False)
+
+    # Predator
+    N_1 = Strain(strain_id='1', microcin_expression=[m_species_pred], AHL_expression=[AHL_1], 
+        substrate_dependences=[substrate_objects[0]], microcin_sensitivities=[microcin_ids[0]], substrate_production=[], 
+        antitoxins=[], immunity_expression=[], toxin_expression=[])
+
+    N_2 = Strain(strain_id='2', microcin_expression=[m_species_prey_1], AHL_expression=[AHL_2], 
+        substrate_dependences=[substrate_objects[0]], microcin_sensitivities=[microcin_ids[1]], substrate_production=[], 
+        antitoxins=[], immunity_expression=[], toxin_expression=[])
+
+    N_3 = Strain(strain_id='3', microcin_expression=[m_species_prey_2], AHL_expression=[AHL_2], 
+        substrate_dependences=[substrate_objects[0]], microcin_sensitivities=[microcin_ids[2]], substrate_production=[], 
+        antitoxins=[], immunity_expression=[], toxin_expression=[])
+
+
+    model_1 = Model(1, [N_1, N_2, N_3])
+
+
+    m_species_pred = Microcin(config_idx=1, microcin_id=microcin_ids[0], AHL_inducer_list=[], AHL_repressor_list=[AHL_2], constitutive_expression=False)
+
+    # Predator
+    N_1 = Strain(strain_id='1', microcin_expression=[m_species_pred], AHL_expression=[AHL_1], 
+        substrate_dependences=[substrate_objects[0]], microcin_sensitivities=[microcin_ids[0]], substrate_production=[], 
+        antitoxins=[], immunity_expression=[imm_species], toxin_expression=[])
+
+    N_2 = Strain(strain_id='2', microcin_expression=[m_species_prey_1], AHL_expression=[AHL_2], 
+        substrate_dependences=[substrate_objects[0]], microcin_sensitivities=[microcin_ids[1]], substrate_production=[], 
+        antitoxins=[], immunity_expression=[], toxin_expression=[])
+
+    N_3 = Strain(strain_id='3', microcin_expression=[m_species_prey_2], AHL_expression=[AHL_2], 
+        substrate_dependences=[substrate_objects[0]], microcin_sensitivities=[microcin_ids[2]], substrate_production=[], 
+        antitoxins=[], immunity_expression=[], toxin_expression=[])
+
+
+    model_2 = Model(2, [N_1, N_2, N_3])
+
+    model_list = [model_0, model_1, model_2]
+
+    for idx, m in enumerate(model_list):
+        m.build_equations()
+        m.build_symbolic_equations()
+        m.build_jacobian()
+        m.extract_species()
+        m.extract_params()
+        m.generate_adjacency_matrix(max_sub=1, max_AHL=2, max_mic=3, max_strains=3, max_antitoxin=0, max_immunity=1, max_toxin=0)
+
+        print("Model ", idx, "Is legal?: ", m.is_legal())
+
+    model_space_generator.generate_adjacency_matricies(model_list, substrate_ids, microcin_ids, AHL_ids, strain_ids, [], immunity_ids, [], output_dir)
+    model_space_generator.generate_simulation_files(model_list, default_params_path, default_init_species_path, output_dir)
 
     # return model_space

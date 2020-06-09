@@ -26,16 +26,16 @@ def spock_manu_no_symm():
     model_space = predefined_model_spaces.spock_manu_no_symm(default_params_path, default_init_species_path, output_dir)
 
 def single_strain_test():
-    output_dir = "./output/input_files_one_species_0/"
+    output_dir = "./output/input_files_one_species_1/"
     default_params_path = './default_params/default/default_params.csv'
     default_init_species_path = './default_params/default/default_init_species.csv'
 
-    model_space = predefined_model_spaces.three_species_no_symm(default_params_path, default_init_species_path, output_dir)
+    model_space = predefined_model_spaces.single_strain_test(default_params_path, default_init_species_path, output_dir)
 
 def two_species_no_symm():
-    output_dir = "./output/input_files_two_species_1/"
-    default_params_path = './default_params/default/default_params.csv'
-    default_init_species_path = './default_params/default/default_init_species.csv'
+    output_dir = "./output/input_files_two_species_5/"
+    default_params_path = './default_params/default_2/default_params.csv'
+    default_init_species_path = './default_params/default_2/default_init_species.csv'
 
     model_space = predefined_model_spaces.two_species_no_symm(default_params_path, default_init_species_path, output_dir)
 
@@ -55,9 +55,9 @@ def three_species_no_symm_auxos():
 
 
 def three_species_no_symm():
-    output_dir = "./output/input_files_three_species_3/"
-    default_params_path = './default_params/default/default_params.csv'
-    default_init_species_path = './default_params/default/default_init_species.csv'
+    output_dir = "./output/input_files_three_species_7/"
+    default_params_path = './default_params/default_2/default_params.csv'
+    default_init_species_path = './default_params/default_2/default_init_species.csv'
 
     model_space = predefined_model_spaces.three_species_no_symm(default_params_path, default_init_species_path, output_dir)
 
@@ -69,10 +69,19 @@ def three_species_one_pred_two_prey():
 
     model_space = predefined_model_spaces.three_species_one_pred_two_prey(default_params_path, default_init_species_path, output_dir)
 
+def three_species_one_pred_two_prey_alt():
+    output_dir = "./output/input_files_pred_prey_prey_1/"
+    default_params_path = './default_params/default/default_params.csv'
+    default_init_species_path = './default_params/default/default_init_species.csv'
+
+    model_space = predefined_model_spaces.three_species_one_pred_two_prey_alt(default_params_path, default_init_species_path, output_dir)
+
 def main():
     # single_strain_test()
+    # two_species_no_symm()
+    # exit()
     # spock_manu_no_symm()
-    # three_species_one_pred_two_prey()
+    # three_species_one_pred_two_prey_alt()
     # exit()
     three_species_no_symm()
     # two_species_no_symm()
