@@ -1,0 +1,33 @@
+output_dir: "./output/input_files_two_species_5_test/"
+default_parameters_path: './default_params/default_2/default_params.csv'
+default_initial_species_path: './default_params/default_2/default_init_species.csv'
+
+
+# Set IDs for the strains being used. Number of IDs is the number of strains
+strain_ids:
+  - '1'
+  - '2'
+
+# Set IDs for the parts being used. IDs should be given as strings. Number of IDs
+# is the number of available parts.
+substrate_ids:
+  - 'glu'
+
+AHL_ids:
+  - '1'
+  - '2'
+
+bacteriocin_ids:
+  - '1'
+  - '2'
+
+# Set bacteriocin expression options
+bacteriocin_induced: True
+bacteriocin_repressed: True
+bacteriocin_constitutive: False
+
+## Set part combination limits
+# These include limits to the extenent a single strain can be engineered
+strain_max_bacteriocin: 1 # Maximum number of bacteriocin that can be expressed by a single strain
+strain_max_AHL: 1 # Maximum number of QS that can be expressed by a single strain
+strain_max_bacteriocin_sens: 1 # Maximum number of bacteriocin sensitivities

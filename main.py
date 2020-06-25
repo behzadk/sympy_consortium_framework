@@ -83,8 +83,8 @@ def main():
     # spock_manu_no_symm()
     # three_species_one_pred_two_prey_alt()
     # exit()
-    three_species_no_symm()
-    # two_species_no_symm()
+    # three_species_no_symm()
+    two_species_no_symm()
     # two_species_no_symm_auxos()
     # three_species_no_symm_auxos()
 
