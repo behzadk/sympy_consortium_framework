@@ -1,9 +1,10 @@
-## Config file was used to generate model space for two strain experiments
-# Model space contains two strains, two QS (AHLs) and two bacteriocins. 
+## Config file was used to generate model space for three strain experiments
+# Model space contains three strains, two QS (AHLs) and three bacteriocins. 
 # model space limits are each strain can express a maximum of one bacteriocin,
 # and one QS. Each strain is sensitive to up to one bacteriocin in the system. 
 
-output_dir: "./output/input_files_two_species_5/"
+
+output_dir: "./output/input_files_three_species/"
 default_parameters_path: './default_params/default_2/default_params.csv'
 default_initial_species_path: './default_params/default_2/default_init_species.csv'
 
@@ -11,6 +12,7 @@ default_initial_species_path: './default_params/default_2/default_init_species.c
 strain_ids:
   - '1'
   - '2'
+  - '3'
 
 # Set IDs for the parts being used. IDs should be given as strings. Number of IDs
 # is the number of available parts.
@@ -24,6 +26,7 @@ AHL_ids:
 bacteriocin_ids:
   - '1'
   - '2'
+  - '3'
 
 # Set bacteriocin expression options
 bacteriocin_induced: True
